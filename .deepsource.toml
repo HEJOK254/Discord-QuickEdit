@@ -1,0 +1,9 @@
+version = 1
+
+exclude_patterns = [
+  "*.csproj",
+  "*.sln"
+]
+
+[[analyzers]]
+name = "csharp"
