@@ -63,6 +63,12 @@ namespace QuickEdit.Commands
 				case "test":
 					await command.RespondAsync("Test command executed!");
 					break;
+
+				// In case the command is not recognized by the bot
+				default:
+					await command.RespondAsync("An error occurred with the command you tried to execute", ephemeral: true);
+					await Program.Log("CommandManager", "Failed to execute slash command.", LogSeverity.Error);
+					break;
 			}
 		}
 	}
