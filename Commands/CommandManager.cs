@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -7,69 +7,67 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuickEdit.Commands
+namespace QuickEdit.Commands;
+public class CommandManager
 {
-	public class CommandManager
+	private readonly DiscordSocketClient _client = Program.client;
+
+	// Macros for interaction context types
+	private static readonly InteractionContextType[] interactionContextAll = new InteractionContextType[] { InteractionContextType.PrivateChannel, InteractionContextType.Guild, InteractionContextType.BotDm };
+	private static readonly InteractionContextType[] interactionContextUser = new InteractionContextType[] { InteractionContextType.PrivateChannel, InteractionContextType.Guild };
+
+	#region Command List
+	List<SlashCommandBuilder> slashCommandBuilders = new List<SlashCommandBuilder>() {
+		new SlashCommandBuilder()
+			.WithName("test")
+			.WithDescription("Test command.")
+			.WithIntegrationTypes(ApplicationIntegrationType.UserInstall)
+			.WithContextTypes(interactionContextAll),
+	};
+	#endregion
+
+	public async Task InitAsync()
 	{
-		private DiscordSocketClient _client = Program.client;
-
-		// Macros for interaction context types
-		private static readonly InteractionContextType[] interactionContextAll = new InteractionContextType[] { InteractionContextType.PrivateChannel, InteractionContextType.Guild, InteractionContextType.BotDm };
-		private static readonly InteractionContextType[] interactionContextUser = new InteractionContextType[] { InteractionContextType.PrivateChannel, InteractionContextType.Guild };
-
-		#region Command List
-		List<SlashCommandBuilder> slashCommandBuilders = new List<SlashCommandBuilder>() {
-			new SlashCommandBuilder()
-				.WithName("test")
-				.WithDescription("Test command.")
-				.WithIntegrationTypes(ApplicationIntegrationType.UserInstall)
-				.WithContextTypes(interactionContextAll),
-		};
-		#endregion
-
-		public async Task Init()
-		{
-			// Build and register commands
-			var builtCommands = BulkBuildCommands(slashCommandBuilders);
-			await RegisterCommands(builtCommands);
+		// Build and register commands
+		var builtCommands = BulkBuildCommands(slashCommandBuilders);
+		await RegisterCommandsAsync(builtCommands);
 			
-			_client.SlashCommandExecuted += SlashCommandHandler;
+		_client.SlashCommandExecuted += SlashCommandHandlerAsync;
+	}
+
+	private List<SlashCommandProperties> BulkBuildCommands(List<SlashCommandBuilder> commandBuilders) {
+		var builtCommands = new List<SlashCommandProperties>();
+		foreach (var commandBuilder in commandBuilders) {
+			builtCommands.Add(commandBuilder.Build());
 		}
 
-		private List<SlashCommandProperties> BulkBuildCommands(List<SlashCommandBuilder> commandBuilders) {
-			var builtCommands = new List<SlashCommandProperties>();
-			foreach (var commandBuilder in commandBuilders) {
-				builtCommands.Add(commandBuilder.Build());
-			}
+		return builtCommands;
+	}
 
-			return builtCommands;
+	public async Task RegisterCommandsAsync(List<SlashCommandProperties> slashCommands) {
+		try {
+			await _client.BulkOverwriteGlobalApplicationCommandsAsync(slashCommands.ToArray());
+			await Program.LogAsync("CommandManager", "Successfully registered slash commands.");
 		}
-
-		public async Task RegisterCommands(List<SlashCommandProperties> slashCommands) {
-			try {
-				await _client.BulkOverwriteGlobalApplicationCommandsAsync(slashCommands.ToArray());
-				await Program.Log("CommandManager", "Successfully registered slash commands.");
-			}
-			catch {
-				await Program.Log("CommandManager", "Failed to register slash commands.", LogSeverity.Critical);
-				return;
-			}
+		catch {
+			await Program.LogAsync("CommandManager", "Failed to register slash commands.", LogSeverity.Critical);
+			return;
 		}
+	}
 
-		private async Task SlashCommandHandler(SocketSlashCommand command)
+	private async Task SlashCommandHandlerAsync(SocketSlashCommand command)
+	{
+		switch (command.Data.Name)
 		{
-			switch (command.Data.Name)
-			{
-				case "test":
-					await command.RespondAsync("Test command executed!");
-					break;
+			case "test":
+				await command.RespondAsync("Test command executed!");
+				break;
 
-				// In case the command is not recognized by the bot
-				default:
-					await command.RespondAsync("An error occurred with the command you tried to execute", ephemeral: true);
-					await Program.Log("CommandManager", "Failed to execute slash command.", LogSeverity.Error);
-					break;
-			}
+			// In case the command is not recognized by the bot
+			default:
+				await command.RespondAsync("An error occurred with the command you tried to execute", ephemeral: true);
+				await Program.LogAsync("CommandManager", "Failed to execute slash command.", LogSeverity.Error);
+				break;
 		}
 	}
 }

@@ -2,21 +2,24 @@
 using Discord.WebSocket;
 using QuickEdit;
 using QuickEdit.Commands;
-using QuickEdit.Config;
 
+namespace QuickEdit;
 class Program
 {
 	public static DiscordSocketClient client;
-	public static Config config = Config.GetConfig();
+	public static Config? config = Config.GetConfig();
 
 	public static Task Main(string[] args) => new Program().MainAsync();
 
 	public async Task MainAsync()
 	{
+		// If the config is null, we can't continue as the bot won't have a token to login with
+		if (config == null) return;
+
 		client = new DiscordSocketClient();
 
-		client.Log += Log;
-		client.Ready += OnReady;
+		client.Log += LogAsync;
+		client.Ready += OnReadyAsync;
 
 		await client.LoginAsync(TokenType.Bot, config.token);
 		await client.StartAsync();
@@ -31,21 +34,21 @@ class Program
 		await Task.Delay(-1);
 	}
 
-	private async Task OnReady()
+	private async Task OnReadyAsync()
 	{
-		await new CommandManager().Init();
+		await new CommandManager().InitAsync();
 	}
 
-	public Task Log(LogMessage message)
+	public Task LogAsync(LogMessage message)
 	{
-		string msg = $"[{DateTime.Now.ToString("HH.mm.ss")}] {message.Source}: {message.Message}";
+		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {message.Source}: {message.Message}";
 		Console.WriteLine(msg + " " + message.Exception);
 		return Task.CompletedTask;
 	}
 
-	public static Task Log(string source, string message, LogSeverity severity = LogSeverity.Info)
+	public static Task LogAsync(string source, string message, LogSeverity severity = LogSeverity.Info)
 	{
-		string msg = $"[{DateTime.Now.ToString("HH.mm.ss")}] {source}: {message}";
+		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {source}: {message}";
 
 		// Change color based on severity
 		switch (severity)
