@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using QuickEdit;
 using QuickEdit.Commands;
@@ -36,7 +36,15 @@ class Program
 
 	private async Task OnReadyAsync()
 	{
-		await new CommandManager().InitAsync();
+		try
+		{
+			await InteractionServiceHandler.InitAsync();
+		}
+		catch
+		{
+			await LogAsync("Program", "Exiting", LogSeverity.Info);
+			Environment.Exit(1);
+		}
 	}
 
 	public Task LogAsync(LogMessage message)
