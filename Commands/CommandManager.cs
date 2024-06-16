@@ -1,4 +1,5 @@
 using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,40 @@ public class CommandManager
 			.WithDescription("Test command.")
 			.WithIntegrationTypes(ApplicationIntegrationType.UserInstall)
 			.WithContextTypes(interactionContextAll),
+
+		new SlashCommandBuilder()
+			.WithName("trim")
+			.WithDescription("Trim a video")
+			.WithIntegrationTypes(ApplicationIntegrationType.UserInstall)
+			.WithContextTypes(interactionContextUser)
+			.AddOption(new SlashCommandOptionBuilder()
+				.WithName("video")
+				.WithDescription("The video to trim")
+				.WithType(ApplicationCommandOptionType.Attachment)
+				.WithRequired(true))
+			.AddOption(new SlashCommandOptionBuilder()
+				.WithName("start")
+				.WithDescription("What time should the video start? [XXh XXm XXs XXms]")
+				.WithType(ApplicationCommandOptionType.String) // TODO: Change to ApplicationCommandOptionType.Time if added one day
+				.WithAutocomplete(true)
+				.WithMinLength(2) // The time cannot be expressed with less than 2 characters
+				.WithRequired(false))
+			.AddOption(new SlashCommandOptionBuilder()
+				.WithName("end")
+				.WithDescription("What time should the video end? [XXh XXm XXs XXms]")
+				.WithType(ApplicationCommandOptionType.String) // TODO: Change to ApplicationCommandOptionType.Time if added one day
+				.WithMinLength(2) // The time cannot be expressed with less than 2 characters
+				.WithRequired(false))
+			.AddOption(new SlashCommandOptionBuilder()
+				.WithName("message")
+				.WithDescription("A message to send with the video when it's trimmed")
+				.WithType(ApplicationCommandOptionType.String)
+				.WithRequired(false))
+			.AddOption(new SlashCommandOptionBuilder()
+				.WithName("ephemeral")
+				.WithDescription("If the video should be sent as a temporary message, that's only visible to you")
+				.WithType(ApplicationCommandOptionType.Boolean)
+				.WithRequired(false))
 	};
 	#endregion
 
@@ -60,7 +95,11 @@ public class CommandManager
 		switch (command.Data.Name)
 		{
 			case "test":
-				await command.RespondAsync("Test command executed!");
+				command.RespondAsync("Test command executed!");
+				break;
+
+			case "trim":
+				VideoUtils.TrimVideoAsync(command);
 				break;
 
 			// In case the command is not recognized by the bot
