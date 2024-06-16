@@ -1,12 +1,11 @@
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
-using QuickEdit;
 using QuickEdit.Commands;
 
 namespace QuickEdit;
 class Program
 {
-	public static DiscordSocketClient client;
+	public static DiscordSocketClient? client;
 	public static Config? config = Config.GetConfig();
 
 	public static Task Main(string[] args) => new Program().MainAsync();
@@ -25,9 +24,12 @@ class Program
 		await client.StartAsync();
 
 		// Custom activities use a different method
-		if (config.statusType == ActivityType.CustomStatus) {
+		if (config.statusType == ActivityType.CustomStatus)
+		{
 			await client.SetCustomStatusAsync(config.status);
-		} else {
+		}
+		else
+		{
 			await client.SetGameAsync(config.status, null, config.statusType);
 		}
 
