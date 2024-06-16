@@ -45,12 +45,12 @@ public class VideoUtils : InteractionModuleBase
 		TimeSpan trimStart;
 		TimeSpan trimEnd;
 		try {
-			if (trimStartString != "") // Avoid invalid format exceptions
+			if (!string.IsNullOrEmpty(trimStartString)) // Avoid invalid format exceptions
 				trimStart = TimeSpanFromHMS(trimStartString);
 			else
 				trimStart = TimeSpan.Zero;
 
-			if (trimEndString != "") // Avoid invalid format exceptions
+			if (!string.IsNullOrEmpty(trimEndString)) // Avoid invalid format exceptions
 				trimEnd = TimeSpanFromHMS(trimEndString);
 			else
 				trimEnd = TimeSpan.Zero;
