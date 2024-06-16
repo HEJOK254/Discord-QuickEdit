@@ -5,7 +5,7 @@ using Discord.WebSocket;
 namespace QuickEdit.Commands;
 public class InteractionServiceHandler
 {
-	private static readonly DiscordSocketClient _client = Program.client;
+	private static readonly DiscordSocketClient? _client = Program.client;
 	private static InteractionService? _interactionService;
 	private static readonly InteractionServiceConfig _interactionServiceConfig = new() { UseCompiledLambda = true, DefaultRunMode = RunMode.Async };
 
@@ -17,7 +17,7 @@ public class InteractionServiceHandler
 	{
 		try
 		{
-			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
+			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 		}
 		catch
@@ -48,7 +48,7 @@ public class InteractionServiceHandler
 			}
 
 			await _interactionService.RegisterCommandsGloballyAsync();
-			_client.InteractionCreated += OnInteractionCreatedAsync;
+			_client!.InteractionCreated += OnInteractionCreatedAsync;
 			await Program.LogAsync("InteractionServiceManager", "Modules registered successfully", LogSeverity.Info);
 		}
 		catch (Exception e)
