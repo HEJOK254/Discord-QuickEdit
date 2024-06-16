@@ -50,7 +50,7 @@ class Program
 	{
 		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {source}: {message}";
 
-		// Change color based on severity
+		// Change color / display based on severity
 		switch (severity)
 		{
 			case LogSeverity.Warning:
@@ -66,6 +66,15 @@ class Program
 
 			case LogSeverity.Error:
 				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(msg);
+				Console.ResetColor();
+				break;
+
+			case LogSeverity.Verbose:
+				// Verbose logs are only displayed if the debug flag is set to true in the config
+				if (config == null || !config.debug) break;
+
+				Console.ForegroundColor = ConsoleColor.DarkGray;
 				Console.WriteLine(msg);
 				Console.ResetColor();
 				break;
