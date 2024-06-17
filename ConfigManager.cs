@@ -5,8 +5,6 @@ namespace QuickEdit;
 public class Config
 {
 	public required string token;
-	public ulong logChannel;
-	public ulong guildID;
 	public ActivityType statusType;
 	public string status = string.Empty;
 	public bool debug = false;
