@@ -42,18 +42,12 @@ public class VideoUtils : InteractionModuleBase
 		}
 
 		// Get TimeSpans
-		TimeSpan trimStart;
-		TimeSpan trimEnd;
+		TimeSpan trimStart = TimeSpan.Zero;
+		TimeSpan trimEnd = TimeSpan.Zero;
 		try {
-			if (!string.IsNullOrEmpty(trimStartString)) // Avoid invalid format exceptions
-				trimStart = TimeSpanFromHMS(trimStartString);
-			else
-				trimStart = TimeSpan.Zero;
-
-			if (!string.IsNullOrEmpty(trimEndString)) // Avoid invalid format exceptions
-				trimEnd = TimeSpanFromHMS(trimEndString);
-			else
-				trimEnd = TimeSpan.Zero;
+			// Avoid invalid format exceptions
+			if (!string.IsNullOrEmpty(trimStartString)) trimStart = TimeSpanFromHMS(trimStartString);
+			if (!string.IsNullOrEmpty(trimEndString)) trimEnd = TimeSpanFromHMS(trimEndString);
 		} catch (Exception e) {
 			if (e is ArgumentException)
 			{
@@ -78,7 +72,7 @@ public class VideoUtils : InteractionModuleBase
 		await DownloadVideoAsync(video.Url, videoInputPath);
 
 		var mediaInfo = await FFProbe.AnalyseAsync(videoInputPath);
-		CheckTimes(ref trimStart, ref trimEnd, mediaInfo.Duration);
+		CheckTimes(mediaInfo.Duration, ref trimStart, ref trimEnd);
 
 		// Check if the temporary directory, where the video is supposed to be exists
 		if (!Directory.Exists("./tmp"))
@@ -103,10 +97,10 @@ public class VideoUtils : InteractionModuleBase
 	///		<item>Set <paramref name="trimStart"/> to <c>0</c> if it's greater or equal to the video's <paramref name="duration"/></item>
 	/// </list>
 	/// </summary>
+	/// <param name="duration">Duration of the video</param>
 	/// <param name="trimStart">Start of the trim</param>
 	/// <param name="trimEnd">End of the trim</param>
-	/// <param name="duration">Duration of the video</param>
-	private static void CheckTimes(ref TimeSpan trimStart, ref TimeSpan trimEnd, TimeSpan duration)
+	private static void CheckTimes(TimeSpan duration, ref TimeSpan trimStart, ref TimeSpan trimEnd)
 	{
 		// Set trimEnd to duration if smaller or equal to trimStart
 		if (trimEnd <= trimStart)

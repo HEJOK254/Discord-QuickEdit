@@ -45,7 +45,8 @@ class Program
 		catch
 		{
 			await LogAsync("Program", "Exiting", LogSeverity.Info);
-			Environment.Exit(1);
+			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
+			Environment.Exit(1); // skipcq: CS-W1005
 		}
 	}
 
