@@ -27,17 +27,17 @@ public class VideoUtils : InteractionModuleBase
 		// Achknowledge the command
 		await DeferAsync(ephemeral);
 
-		// There is a similar check for the TimeSpan library below, but this it to avoid 
-		if (trimStartString == "" && trimEndString == "")
-		{
-			await FollowupAsync("You must provide a start or end time to trim the video.", ephemeral: true);
-			return;
-		}
-
 		// Reject incorrect video formats
 		if (video.ContentType != "video/mp4")
 		{
 			await FollowupAsync("Invalid video format. Please provide an MP4 file.", ephemeral: true);
+			return;
+		}
+
+		// There is a similar check for the TimeSpan library below, but this it to avoid 
+		if (string.IsNullOrEmpty(trimStartString) && string.IsNullOrEmpty(trimEndString))
+		{
+			await FollowupAsync("You must provide a start or end time to trim the video.", ephemeral: true);
 			return;
 		}
 
