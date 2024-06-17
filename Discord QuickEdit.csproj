@@ -6,6 +6,7 @@
     <RootNamespace>QuickEdit</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>quickedit</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
