@@ -5,8 +5,6 @@ namespace QuickEdit;
 public class Config
 {
 	public required string token;
-	public ulong logChannel;
-	public ulong guildID;
 	public ActivityType statusType;
 	public string status = string.Empty;
 	public bool debug = false;
@@ -20,10 +18,13 @@ public class Config
 			return null;
 		}
 
-		try {
+		try
+		{
 			return JsonConvert.DeserializeObject<Config>(File.ReadAllText(path))!;
-		} catch {
-			Program.LogAsync("Config" , "Failed to parse config file.", LogSeverity.Critical);
+		}
+		catch
+		{
+			Program.LogAsync("Config", "Failed to parse config file.", LogSeverity.Critical);
 			return null;
 		}
 	}

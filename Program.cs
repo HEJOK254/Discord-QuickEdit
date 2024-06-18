@@ -1,12 +1,11 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using QuickEdit;
 using QuickEdit.Commands;
 
 namespace QuickEdit;
 class Program
 {
-	public static DiscordSocketClient client;
+	public static DiscordSocketClient? client;
 	public static Config? config = Config.GetConfig();
 
 	public static Task Main(string[] args) => new Program().MainAsync();
@@ -25,9 +24,12 @@ class Program
 		await client.StartAsync();
 
 		// Custom activities use a different method
-		if (config.statusType == ActivityType.CustomStatus) {
+		if (config.statusType == ActivityType.CustomStatus)
+		{
 			await client.SetCustomStatusAsync(config.status);
-		} else {
+		}
+		else
+		{
 			await client.SetGameAsync(config.status, null, config.statusType);
 		}
 
@@ -36,7 +38,16 @@ class Program
 
 	private async Task OnReadyAsync()
 	{
-		await new CommandManager().InitAsync();
+		try
+		{
+			await InteractionServiceHandler.InitAsync();
+		}
+		catch
+		{
+			await LogAsync("Program", "Exiting", LogSeverity.Info);
+			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
+			Environment.Exit(1); // skipcq: CS-W1005
+		}
 	}
 
 	public Task LogAsync(LogMessage message)
