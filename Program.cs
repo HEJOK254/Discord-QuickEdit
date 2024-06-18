@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using QuickEdit.Commands;
 
@@ -7,6 +8,7 @@ class Program
 {
 	public static DiscordSocketClient? client;
 	public static Config? config = Config.GetConfig();
+	public static readonly DiscordSocketConfig socketConfig = new() { GatewayIntents = GatewayIntents.None };
 
 	public static Task Main(string[] args) => new Program().MainAsync();
 
@@ -15,7 +17,7 @@ class Program
 		// If the config is null, we can't continue as the bot won't have a token to login with
 		if (config == null) return;
 
-		client = new DiscordSocketClient();
+		client = new DiscordSocketClient(socketConfig);
 
 		client.Log += LogAsync;
 		client.Ready += OnReadyAsync;
