@@ -12,7 +12,6 @@ public class InteractionServiceHandler
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	/// <returns>True if success, false if failure</returns>
 	public static async Task InitAsync()
 	{
 		try
@@ -36,7 +35,7 @@ public class InteractionServiceHandler
 		if (_interactionService == null)
 		{
 			await Program.LogAsync("InteractionServiceManager.RegisterModulesAsync()", "InteractionService not initialized yet", LogSeverity.Error);
-			throw new Exception("InteractionService not initialized while trying to register commands");
+			throw new InvalidOperationException("InteractionService not initialized while trying to register commands");
 		}
 
 		try
