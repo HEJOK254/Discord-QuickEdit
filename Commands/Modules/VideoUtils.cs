@@ -81,7 +81,7 @@ public class VideoUtils : InteractionModuleBase
 		}
 
 		// Process and send video
-		await FFMpeg.SubVideoAsync(videoInputPath, videoOutputPath, (TimeSpan)trimStart, (TimeSpan)trimEnd); // Need to convert the TimeSpans since the value is nullable
+		await FFMpeg.SubVideoAsync(videoInputPath, videoOutputPath, trimStart, trimEnd);
 		await FollowupWithFileAsync(videoOutputPath, video.Filename, message, ephemeral: ephemeral);
 
 		// Clean up
