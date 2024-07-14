@@ -1,10 +1,6 @@
 using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
 using FFMpegCore;
-using FFMpegCore.Extend;
-using System.Net.Mail;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace QuickEdit.Commands.Modules;
@@ -69,16 +65,17 @@ public class VideoUtils : InteractionModuleBase
 			return;
 		}
 
-		await DownloadVideoAsync(video.Url, videoInputPath);
-
-		var mediaInfo = await FFProbe.AnalyseAsync(videoInputPath);
-		CheckTimes(mediaInfo.Duration, ref trimStart, ref trimEnd);
-
 		// Check if the temporary directory, where the video is supposed to be exists
 		if (!Directory.Exists("./tmp"))
 		{
 			Directory.CreateDirectory("./tmp");
+			await Program.LogAsync("VideoUtils", "TMP directory not found. Created it automatically.", LogSeverity.Info);
 		}
+
+		await DownloadVideoAsync(video.Url, videoInputPath);
+
+		var mediaInfo = await FFProbe.AnalyseAsync(videoInputPath);
+		CheckTimes(mediaInfo.Duration, ref trimStart, ref trimEnd);
 
 		// Process and send video
 		await FFMpeg.SubVideoAsync(videoInputPath, videoOutputPath, trimStart, trimEnd);

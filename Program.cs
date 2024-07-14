@@ -1,6 +1,7 @@
 ﻿using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
+using FFMpegCore;
+using FFMpegCore.Helpers;
 using QuickEdit.Commands;
 
 namespace QuickEdit;
@@ -16,6 +17,7 @@ class Program
 	{
 		// If the config is null, we can't continue as the bot won't have a token to login with
 		if (config == null) return;
+		FFMpegHelper.VerifyFFMpegExists(GlobalFFOptions.Current);
 
 		client = new DiscordSocketClient(socketConfig);
 
