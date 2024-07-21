@@ -46,7 +46,7 @@ class Program
 	private static void ShowStartMessage()
 	{
 		// https://stackoverflow.com/questions/1600962/displaying-the-build-date
-		var buildVer = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "??";
+		var buildVer = typeof(Program).Assembly.GetName().Version?.ToString() ?? "??";
 		var compileTime = new DateTime(Builtin.CompileTime, DateTimeKind.Utc); // Use a different method maybe
 
 		Console.WriteLine($"\u001b[36m ---- QuickEdit ver. {buildVer} - Build Date: {compileTime.ToUniversalTime()} UTC - By HEJOK254 ---- \u001b[0m");
