@@ -18,7 +18,7 @@
   <Target Name="Date" BeforeTargets="BeforeBuild">
 	  <WriteLinesToFile
 		File="GeneratedFiles\gen.cs"
-		Lines="static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B }"
+		Lines="namespace QuickEdit { static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B  } }"
 		Overwrite="true" />
 	  <Message Importance="high" Text="Generated file: GeneratedFiles\gen.cs" />
   </Target>
