@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using FFMpegCore;
 using FFMpegCore.Helpers;
 using QuickEdit.Commands;
+using System.Reflection;
 
 namespace QuickEdit;
 class Program
@@ -15,6 +16,8 @@ class Program
 
 	public async Task MainAsync()
 	{
+		ShowStartMessage();
+
 		// If the config is null, we can't continue as the bot won't have a token to login with
 		if (config == null) return;
 		FFMpegHelper.VerifyFFMpegExists(GlobalFFOptions.Current);
@@ -38,6 +41,15 @@ class Program
 		}
 
 		await Task.Delay(-1);
+	}
+
+	private static void ShowStartMessage()
+	{
+		// https://stackoverflow.com/questions/1600962/displaying-the-build-date
+		var buildVer = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "??";
+		var compileTime = new DateTime(Builtin.CompileTime, DateTimeKind.Utc); // Use a different method maybe
+
+		Console.WriteLine($"\u001b[36m ---- QuickEdit ver. {buildVer} - Build Date: {compileTime.ToUniversalTime()} UTC - By HEJOK254 ---- \u001b[0m");
 	}
 
 	private async Task OnReadyAsync()
@@ -66,6 +78,7 @@ class Program
 		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {source}: {message}";
 
 		// Change color / display based on severity
+		// TODO: Maybe use ANSI escape codes instead?
 		switch (severity)
 		{
 			case LogSeverity.Warning:

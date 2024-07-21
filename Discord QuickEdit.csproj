@@ -14,4 +14,10 @@
     <PackageReference Include="FFMpegCore" Version="5.1.0" />
   </ItemGroup>
 
+	<Target Name="Date" BeforeTargets="BeforeBuild">
+		<WriteLinesToFile File="$(IntermediateOutputPath)gen.cs" Lines="static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B }" Overwrite="true" />
+		<ItemGroup>
+			<Compile Include="$(IntermediateOutputPath)gen.cs" />
+		</ItemGroup>
+	</Target>
 </Project>
