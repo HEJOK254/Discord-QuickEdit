@@ -15,10 +15,12 @@
     <PackageReference Include="FFMpegCore" Version="5.1.0" />
   </ItemGroup>
 
-	<Target Name="Date" BeforeTargets="BeforeBuild">
-		<WriteLinesToFile File="$(IntermediateOutputPath)gen.cs" Lines="static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B }" Overwrite="true" />
-		<ItemGroup>
-			<Compile Include="$(IntermediateOutputPath)gen.cs" />
-		</ItemGroup>
-	</Target>
+  <Target Name="Date" BeforeTargets="BeforeBuild">
+	  <WriteLinesToFile
+		File="GeneratedFiles\gen.cs"
+		Lines="static partial class Builtin { public static long CompileTime = $([System.DateTime]::UtcNow.Ticks) %3B }"
+		Overwrite="true" />
+	  <Message Importance="high" Text="Generated file: GeneratedFiles\gen.cs" />
+  </Target>
+
 </Project>
