@@ -18,6 +18,10 @@ public class InteractionServiceHandler
 		{
 			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
+
+			// Can't simply get the result of the ExecuteCommandAsync, because of RunMode.Async
+			// So the event has to be used to handle the result
+			_interactionService.SlashCommandExecuted += OnSlashCommandExecutedAsync;
 		}
 		catch
 		{
@@ -69,13 +73,9 @@ public class InteractionServiceHandler
 		try
 		{
 			var ctx = new SocketInteractionContext(_client, interaction);
-			var res = await _interactionService.ExecuteCommandAsync(ctx, null);
-
-			if (res.IsSuccess is false)
-			{
-				await Program.LogAsync("InteractionServiceManager", $"Error handling interaction: {res}", LogSeverity.Error);
-				await ctx.Channel.SendMessageAsync(res.ToString());
-			}
+			await _interactionService.ExecuteCommandAsync(ctx, null);
+			// Result is handled in OnSlashCommandExecutedAsync, since the RunMode is RunMode.Async.
+			// See https://docs.discordnet.dev/guides/int_framework/post-execution.html for more info.
 		}
 		catch (Exception e)
 		{
@@ -86,6 +86,23 @@ public class InteractionServiceHandler
 				await interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync());
 			}
 
+			throw;
+		}
+	}
+
+	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result) {
+		// Only trying to handle errors lol
+		if (result.IsSuccess)
+			return;
+
+		try
+		{
+			await Program.LogAsync("InteractionServiceManager", $"Error handling interaction: {result.Error}", LogSeverity.Error);
+			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
+		}
+		catch (Exception e)
+		{
+			await Program.LogAsync("InteractionServiceManager", $"Error handling interaction exception bruh: {e.ToString()}", LogSeverity.Error);
 			throw;
 		}
 	}
