@@ -11,7 +11,7 @@ namespace QuickEdit.LoggerConfig.LoggerImplementation;
 
 public class AutoLog
 {
-    public static Task LogAsyncA(LogMessage message)
+    public static Task LogDiscordMessage(LogMessage message)
     {
         var logLevel = message.Severity switch
         {

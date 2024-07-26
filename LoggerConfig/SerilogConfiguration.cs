@@ -17,7 +17,7 @@ public class SerilogConfiguration
 
         Directory.CreateDirectory(intermediateOutputPath);
 
-        var logpath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.Now:yyyyMMddHHmmss}.txt");
+        var logpath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
