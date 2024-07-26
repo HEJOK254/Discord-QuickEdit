@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace QuickEdit;
 public class Config
@@ -14,8 +15,8 @@ public class Config
 		string path = "./config.json";
 		if (!File.Exists(path))
 		{
-			Program.LogAsync("Config", $"Config file not found at: {path}", LogSeverity.Critical);
-			return null;
+            Log.Fatal("Config file not found at: {Path}", path);
+            return null;
 		}
 
 		try
@@ -24,8 +25,8 @@ public class Config
 		}
 		catch
 		{
-			Program.LogAsync("Config", "Failed to parse config file.", LogSeverity.Critical);
-			return null;
+            Log.Fatal("Failed to parse config file.");
+            return null;
 		}
 	}
 }
