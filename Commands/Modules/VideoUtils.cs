@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Interactions;
 using FFMpegCore;
+using Serilog;
 using System.Text.RegularExpressions;
 
 namespace QuickEdit.Commands.Modules;
@@ -69,7 +70,7 @@ public class VideoUtils : InteractionModuleBase
 		if (!Directory.Exists("./tmp"))
 		{
 			Directory.CreateDirectory("./tmp");
-			await Program.LogAsync("VideoUtils", "TMP directory not found. Created it automatically.", LogSeverity.Info);
+			Log.Information("TMP directory not found. Created it automatically, VideoUtils");
 		}
 
 		await DownloadVideoAsync(video.Url, videoInputPath);

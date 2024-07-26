@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Serilog;
 
 namespace QuickEdit.Commands;
 public class InteractionServiceHandler
@@ -25,7 +26,7 @@ public class InteractionServiceHandler
 		}
 		catch
 		{
-			await Program.LogAsync("InteractionServiceHandler", "Error initializing InteractionService", LogSeverity.Critical);
+			Log.Fatal("Error initializing InteractionService");
 			throw;
 		}
 	}
@@ -38,7 +39,7 @@ public class InteractionServiceHandler
 		// The service might not have been initialized yet
 		if (_interactionService == null)
 		{
-			await Program.LogAsync("InteractionServiceManager.RegisterModulesAsync()", "InteractionService not initialized yet", LogSeverity.Error);
+			Log.Error("InteractionService not initialized yet, InteractionServiceManager.RegisterModulesAsync()");
 			throw new InvalidOperationException("InteractionService not initialized while trying to register commands");
 		}
 
@@ -52,11 +53,11 @@ public class InteractionServiceHandler
 
 			await _interactionService.RegisterCommandsGloballyAsync();
 			_client!.InteractionCreated += OnInteractionCreatedAsync;
-			await Program.LogAsync("InteractionServiceManager", "Modules registered successfully", LogSeverity.Info);
+			Log.Information("Modules registered successfully, InteractionServiceManager");
 		}
 		catch (Exception e)
 		{
-			await Program.LogAsync("InteractionServiceManager", $"Error registering modules. ({e})", LogSeverity.Critical);
+			Log.Fatal($"Error registering modules. ({e})");
 			throw;
 		}
 	}
@@ -66,7 +67,7 @@ public class InteractionServiceHandler
 		// The service might not have been initialized yet
 		if (_interactionService == null)
 		{
-			await Program.LogAsync("InteractionServiceManager.OnInteractionCreatedAsync()", "InteractionService not initialized yet", LogSeverity.Error);
+			Log.Error("InteractionService not initialized yet, InteractionServiceManager.OnInteractionCreatedAsync()");
 			return;
 		}
 
@@ -79,7 +80,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			await Program.LogAsync("InteractionServiceManager", $"Error handling interaction. {e.Message}", LogSeverity.Error);
+			Log.Error($"Error handling interaction. {e.Message}");
 
 			if (interaction.Type is InteractionType.ApplicationCommand)
 			{
@@ -97,12 +98,12 @@ public class InteractionServiceHandler
 
 		try
 		{
-			await Program.LogAsync("InteractionServiceManager", $"Error handling interaction: {result.Error}", LogSeverity.Error);
+			Log.Error($"Error handling interaction: {result.Error}");
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
 		{
-			await Program.LogAsync("InteractionServiceManager", $"Error handling interaction exception bruh: {e.ToString()}", LogSeverity.Error);
+            Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
 			throw;
 		}
 	}
