@@ -34,7 +34,7 @@ class Program
 
 		client = new DiscordSocketClient(socketConfig);
 
-		client.Log += AutoLog.LogDiscordMessage;
+		client.Log += AutoLog.LogMessage;
 		client.Ready += OnReadyAsync;
 
 		await client.LoginAsync(TokenType.Bot, config.token);

@@ -17,13 +17,13 @@ public class SerilogConfiguration
 
         Directory.CreateDirectory(intermediateOutputPath);
 
-        var logpath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
+        var logPath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .Enrich.WithMachineName()
             .WriteTo.Console()
-            .WriteTo.File(logpath, rollingInterval: RollingInterval.Day)
+            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
             .CreateLogger();
     }
 }
