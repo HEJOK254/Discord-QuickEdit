@@ -11,6 +11,8 @@ namespace QuickEdit.LoggerConfig.LoggerImplementation;
 
 public class AutoLog
 {
+    // LogMessage does not run asynchronously, so we can ignore the DeepSource error
+    // skipcq: CS-R1073
     public static Task LogMessage(LogMessage message)
     {
         var logLevel = message.Severity switch
