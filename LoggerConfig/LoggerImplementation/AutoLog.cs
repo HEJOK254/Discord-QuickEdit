@@ -11,6 +11,7 @@ namespace QuickEdit.LoggerConfig.LoggerImplementation;
 
 public class AutoLog
 {
+    // skipcq: CS-R1073
     public static Task LogMessage(LogMessage message)
     {
         var logLevel = message.Severity switch
