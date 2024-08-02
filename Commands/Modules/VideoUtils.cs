@@ -70,7 +70,7 @@ public class VideoUtils : InteractionModuleBase
 		if (!Directory.Exists("./tmp"))
 		{
 			Directory.CreateDirectory("./tmp");
-			Log.Information("TMP directory not found. Created it automatically, VideoUtils");
+			Log.Information("TMP directory not found. Created it automatically");
 		}
 
 		await DownloadVideoAsync(video.Url, videoInputPath);

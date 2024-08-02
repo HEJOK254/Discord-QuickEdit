@@ -19,11 +19,16 @@ public class SerilogConfiguration
 
         var logPath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
 
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .Enrich.WithMachineName()
-            .WriteTo.Console()
-            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
-            .CreateLogger();
+	var loggerConfig = new LoggerConfiguration()
+		.Enrich.WithMachineName()
+		.WriteTo.Console()
+		.WriteTo.File(logPath, rollingInterval: RollingInterval.Day);
+
+	if (Program.config != null && Program.config.debug)
+		loggerConfig.MinimumLevel.Debug();
+	else
+		loggerConfig.MinimumLevel.Information();
+		
+	Log.Logger = loggerConfig.CreateLogger();
     }
 }

@@ -15,7 +15,7 @@ public class Config
 		string path = "./config.json";
 		if (!File.Exists(path))
 		{
-            Log.Fatal("Config file not found at: {Path}", path);
+            Log.Fatal($"Config file not found at: {Path.GetFullPath(path)}");
             return null;
 		}
 
@@ -23,9 +23,9 @@ public class Config
 		{
 			return JsonConvert.DeserializeObject<Config>(File.ReadAllText(path))!;
 		}
-		catch
+		catch (Exception e)
 		{
-            Log.Fatal("Failed to parse config file.");
+            Log.Fatal($"Failed to parse config file: {e.Message}");
             return null;
 		}
 	}
