@@ -24,9 +24,9 @@ public class InteractionServiceHandler
 			// So the event has to be used to handle the result
 			_interactionService.SlashCommandExecuted += OnSlashCommandExecutedAsync;
 		}
-		catch
+		catch (Exception e)
 		{
-			Log.Fatal("Error initializing InteractionService");
+			Log.Fatal($"Error initializing InteractionService: {e.Message}");
 			throw;
 		}
 	}
@@ -39,7 +39,7 @@ public class InteractionServiceHandler
 		// The service might not have been initialized yet
 		if (_interactionService == null)
 		{
-			Log.Error("InteractionService not initialized yet, InteractionServiceManager.RegisterModulesAsync()");
+			Log.Error("Failed to register modules: InteractionService not initialized.");
 			throw new InvalidOperationException("InteractionService not initialized while trying to register commands");
 		}
 
@@ -53,11 +53,11 @@ public class InteractionServiceHandler
 
 			await _interactionService.RegisterCommandsGloballyAsync();
 			_client!.InteractionCreated += OnInteractionCreatedAsync;
-			Log.Information("Modules registered successfully, InteractionServiceManager");
+			Log.Information("Modules registered successfully");
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error registering modules. ({e})");
+						Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
 			throw;
 		}
 	}
@@ -67,7 +67,7 @@ public class InteractionServiceHandler
 		// The service might not have been initialized yet
 		if (_interactionService == null)
 		{
-			Log.Error("InteractionService not initialized yet, InteractionServiceManager.OnInteractionCreatedAsync()");
+			Log.Error("Error handling interaction: InteractionService not initialized.");
 			return;
 		}
 
@@ -80,7 +80,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction. {e.Message}");
+			Log.Error($"Error handling interaction: {e.Message}");
 
 			if (interaction.Type is InteractionType.ApplicationCommand)
 			{
