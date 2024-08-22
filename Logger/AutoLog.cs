@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuickEdit.LoggerConfig.LoggerImplementation;
+namespace QuickEdit.Logger;
 
 public class AutoLog
 {

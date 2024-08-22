@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuickEdit.LoggerConfig;
+namespace QuickEdit.Logger;
 
 public class SerilogConfiguration
 {
