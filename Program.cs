@@ -24,8 +24,6 @@ class Program
 
         AppDomain.CurrentDomain.ProcessExit += (s, e) => Log.CloseAndFlush();
 
-        Log.Information("Starting the application.");
-
         ShowStartMessage();
 
 		// If the config is null, we can't continue as the bot won't have a token to login with
