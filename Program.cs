@@ -1,15 +1,14 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using FFMpegCore;
 using FFMpegCore.Helpers;
 using QuickEdit.Commands;
 using QuickEdit.Logger;
 using Serilog;
-using Serilog.Events;
-using System.Reflection;
 
 namespace QuickEdit;
-class Program
+
+internal class Program
 {
 	public static DiscordSocketClient? client;
 	public static Config? config = Config.GetConfig();
@@ -21,9 +20,9 @@ class Program
 	{
 		SerilogConfiguration.ConfigureLogger();
 
-        AppDomain.CurrentDomain.ProcessExit += (s, e) => Log.CloseAndFlush();
+		AppDomain.CurrentDomain.ProcessExit += (s, e) => Log.CloseAndFlush();
 
-        ShowStartMessage();
+		ShowStartMessage();
 
 		// If the config is null, we can't continue as the bot won't have a token to login with
 		if (config == null) return;
@@ -67,9 +66,9 @@ class Program
 		}
 		catch
 		{
-            Log.Fatal("Program is exiting due to an error in InteractionServiceHandler.");
-            // The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
-            Environment.Exit(1); // skipcq: CS-W1005
+			Log.Fatal("Program is exiting due to an error in InteractionServiceHandler.");
+			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
+			Environment.Exit(1); // skipcq: CS-W1005
 		}
 	}
 }

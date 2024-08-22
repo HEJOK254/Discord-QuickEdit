@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
@@ -57,7 +57,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-						Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
+			Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
 			throw;
 		}
 	}
@@ -91,7 +91,8 @@ public class InteractionServiceHandler
 		}
 	}
 
-	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result) {
+	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
+	{
 		// Only trying to handle errors lol
 		if (result.IsSuccess)
 			return;
@@ -103,7 +104,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-            Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
+			Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
 			throw;
 		}
 	}
