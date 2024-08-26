@@ -11,7 +11,7 @@ public class SerilogConfiguration
 
 		Directory.CreateDirectory(logDirectory);
 
-		var logPath = Path.Combine(logDirectory, $"quickedit-.log");
+		var logPath = Path.Combine(logDirectory, "quickedit-.log");
 
 		var loggerConfig = new LoggerConfiguration()
 			.WriteTo.Console()
