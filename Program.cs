@@ -1,12 +1,14 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using FFMpegCore;
 using FFMpegCore.Helpers;
 using QuickEdit.Commands;
-using System.Reflection;
+using QuickEdit.Logger;
+using Serilog;
 
 namespace QuickEdit;
-class Program
+
+internal class Program
 {
 	public static DiscordSocketClient? client;
 	public static Config? config = Config.GetConfig();
@@ -16,6 +18,10 @@ class Program
 
 	public async Task MainAsync()
 	{
+		SerilogConfiguration.ConfigureLogger();
+
+		AppDomain.CurrentDomain.ProcessExit += (s, e) => Log.CloseAndFlush();
+
 		ShowStartMessage();
 
 		// If the config is null, we can't continue as the bot won't have a token to login with
@@ -24,7 +30,7 @@ class Program
 
 		client = new DiscordSocketClient(socketConfig);
 
-		client.Log += LogAsync;
+		client.Log += AutoLog.LogMessage;
 		client.Ready += OnReadyAsync;
 
 		await client.LoginAsync(TokenType.Bot, config.token);
@@ -60,59 +66,9 @@ class Program
 		}
 		catch
 		{
-			await LogAsync("Program", "Exiting", LogSeverity.Info);
+			Log.Fatal("Program is exiting due to an error in InteractionServiceHandler.");
 			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
 			Environment.Exit(1); // skipcq: CS-W1005
 		}
-	}
-
-	public Task LogAsync(LogMessage message)
-	{
-		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {message.Source}: {message.Message}";
-		Console.WriteLine(msg + " " + message.Exception);
-		return Task.CompletedTask;
-	}
-
-	public static Task LogAsync(string source, string message, LogSeverity severity = LogSeverity.Info)
-	{
-		string msg = $"[{DateTime.UtcNow.ToString("HH.mm.ss")}] {source}: {message}";
-
-		// Change color / display based on severity
-		// TODO: Maybe use ANSI escape codes instead?
-		switch (severity)
-		{
-			case LogSeverity.Warning:
-				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine(msg);
-				Console.ResetColor();
-				break;
-			case LogSeverity.Critical:
-				Console.ForegroundColor = ConsoleColor.DarkRed;
-				Console.WriteLine(msg);
-				Console.ResetColor();
-				break;
-
-			case LogSeverity.Error:
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(msg);
-				Console.ResetColor();
-				break;
-
-			case LogSeverity.Verbose:
-				// Verbose logs are only displayed if the debug flag is set to true in the config
-				if (config == null || !config.debug) break;
-
-				Console.ForegroundColor = ConsoleColor.DarkGray;
-				Console.WriteLine(msg);
-				Console.ResetColor();
-				break;
-
-			default:
-				// All other severities should have the default color of the console
-				Console.ResetColor();
-				Console.WriteLine(msg);
-				break;
-		}
-		return Task.CompletedTask;
 	}
 }

@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Interactions;
 using FFMpegCore;
+using Serilog;
 using System.Text.RegularExpressions;
 
 namespace QuickEdit.Commands.Modules;
@@ -40,20 +41,25 @@ public class VideoUtils : InteractionModuleBase
 		// Get TimeSpans
 		TimeSpan trimStart = TimeSpan.Zero;
 		TimeSpan trimEnd = TimeSpan.Zero;
-		try {
+		try
+		{
 			// Avoid invalid format exceptions
 			if (!string.IsNullOrEmpty(trimStartString)) trimStart = TimeSpanFromHMS(trimStartString);
 			if (!string.IsNullOrEmpty(trimEndString)) trimEnd = TimeSpanFromHMS(trimEndString);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			if (e is ArgumentException)
 			{
 				await FollowupAsync("Invalid time format. Please provide a valid time format (XXh XXm XXs XXms).", ephemeral: true);
-			} else {
+			}
+			else
+			{
 				throw;
 			}
 			return;
 		}
-		
+
 		// Make sure the times are not negative | https://stackoverflow.com/a/1018659/17003609 (comment)
 		trimStart = trimStart.Duration();
 		trimEnd = trimEnd.Duration();
@@ -69,7 +75,7 @@ public class VideoUtils : InteractionModuleBase
 		if (!Directory.Exists("./tmp"))
 		{
 			Directory.CreateDirectory("./tmp");
-			await Program.LogAsync("VideoUtils", "TMP directory not found. Created it automatically.", LogSeverity.Info);
+			Log.Information("TMP directory not found. Created it automatically");
 		}
 
 		await DownloadVideoAsync(video.Url, videoInputPath);
