@@ -7,15 +7,13 @@ public class SerilogConfiguration
 
 	public static void ConfigureLogger()
 	{
-		var intermediateOutputPath =
-			Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..", @"obj\Debug\net8.0\Logs"));
+		var logDirectory = "logs";
 
-		Directory.CreateDirectory(intermediateOutputPath);
+		Directory.CreateDirectory(logDirectory);
 
-		var logPath = Path.Combine(intermediateOutputPath, $"consoleapplog-{DateTime.UtcNow:yyyyMMddHHmmss}.txt");
+		var logPath = Path.Combine(logDirectory, $"quickedit-.log");
 
 		var loggerConfig = new LoggerConfiguration()
-			.Enrich.WithMachineName()
 			.WriteTo.Console()
 			.WriteTo.File(logPath, rollingInterval: RollingInterval.Day);
 
