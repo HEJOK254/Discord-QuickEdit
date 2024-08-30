@@ -27,7 +27,7 @@ public class InteractionServiceHandler
 		{
 			if (_interactionService != null)
 			{
-				await Program.LogAsync("InteractionServiceHandler", "InteractionServiceHandler.InitAsync() executed after the InteractionService has already been initialized", LogSeverity.Warning);
+				Log.Warning("Tried to Initialize the InteractionService after it has already been initialized");
 				return;
 			}
 
