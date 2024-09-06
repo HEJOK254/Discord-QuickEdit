@@ -11,7 +11,7 @@ namespace QuickEdit;
 internal class Program
 {
 	public static DiscordSocketClient? client;
-	public static readonly Config? config = Config.GetConfig();
+	public static Config? config;
 	public static readonly DiscordSocketConfig socketConfig = new() { GatewayIntents = GatewayIntents.None };
 
 	public static Task Main(string[] args) => new Program().MainAsync();
@@ -24,6 +24,7 @@ internal class Program
 
 		ShowStartMessage();
 
+		config = Config.GetConfig();
 		// If the config is null, we can't continue as the bot won't have a token to login with
 		if (config == null)
 		{
