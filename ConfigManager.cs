@@ -12,7 +12,7 @@ public class Config
 
 	public static Config? GetConfig()
 	{
-		string path = "./config.json";
+		string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 		if (!File.Exists(path))
 		{
 			Log.Fatal($"Config file not found at: {Path.GetFullPath(path)}");

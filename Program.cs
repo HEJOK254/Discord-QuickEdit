@@ -11,7 +11,7 @@ namespace QuickEdit;
 internal class Program
 {
 	public static DiscordSocketClient? client;
-	public static Config? config = Config.GetConfig();
+	public static readonly Config? config = Config.GetConfig();
 	public static readonly DiscordSocketConfig socketConfig = new() { GatewayIntents = GatewayIntents.None };
 
 	public static Task Main(string[] args) => new Program().MainAsync();
@@ -25,8 +25,15 @@ internal class Program
 		ShowStartMessage();
 
 		// If the config is null, we can't continue as the bot won't have a token to login with
-		if (config == null) return;
-		FFMpegHelper.VerifyFFMpegExists(GlobalFFOptions.Current);
+		if (config == null)
+		{
+			Log.Information($"Check if you have a valid config.json file present in the directory of the executable ({AppDomain.CurrentDomain.BaseDirectory})");
+			Environment.Exit(1);
+		}
+		else
+		{
+			Log.Debug("Loaded config file");
+		}
 
 		client = new DiscordSocketClient(socketConfig);
 
