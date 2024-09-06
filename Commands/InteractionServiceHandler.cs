@@ -9,25 +9,44 @@ public class InteractionServiceHandler
 	private static readonly DiscordSocketClient? _client = Program.client;
 	private static InteractionService? _interactionService;
 	private static readonly InteractionServiceConfig _interactionServiceConfig = new() { UseCompiledLambda = true, DefaultRunMode = RunMode.Async };
+	private static readonly SemaphoreSlim _initSemaphore = new(1);
+	private static bool isReady = false;
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
 	public static async Task InitAsync()
 	{
+		await _initSemaphore.WaitAsync();
+
+		// Prevent reinitialization
+		if (isReady)
+			return;
+
 		try
 		{
+			if (_interactionService != null)
+			{
+				Log.Warning("Tried to Initialize the InteractionService after it has already been initialized");
+				return;
+			}
+
 			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
 			// Can't simply get the result of the ExecuteCommandAsync, because of RunMode.Async
 			// So the event has to be used to handle the result
 			_interactionService.SlashCommandExecuted += OnSlashCommandExecutedAsync;
+			isReady = true;
 		}
 		catch (Exception e)
 		{
 			Log.Fatal($"Error initializing InteractionService: {e.Message}");
 			throw;
+		}
+		finally
+		{
+			_initSemaphore.Release();
 		}
 	}
 
