@@ -4,10 +4,9 @@ namespace QuickEdit.Logger;
 
 public class SerilogConfiguration
 {
-
 	public static void ConfigureLogger()
 	{
-		var logDirectory = "logs";
+		var logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
 
 		Directory.CreateDirectory(logDirectory);
 
