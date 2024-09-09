@@ -24,16 +24,16 @@ internal class Program
 
 		ShowStartMessage();
 
-		config = Config.GetConfig();
-		// If the config is null, we can't continue as the bot won't have a token to login with
-		if (config == null)
+		try
 		{
-			Log.Information($"Check if you have a valid config.json file present in the directory of the executable ({AppDomain.CurrentDomain.BaseDirectory})");
-			Environment.Exit(1);
+			config = Config.GetConfig();
+			SerilogConfiguration.LoggingLevel.MinimumLevel = config.debug ? Serilog.Events.LogEventLevel.Debug : Serilog.Events.LogEventLevel.Information;
 		}
-		else
+		catch
 		{
-			Log.Debug("Loaded config file");
+			Log.Fatal("Failed to GetConfig()");
+			Environment.ExitCode = 1; // Exit without triggering DeepSource lol
+			return;
 		}
 
 		client = new DiscordSocketClient(socketConfig);
