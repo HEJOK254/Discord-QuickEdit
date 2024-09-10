@@ -48,16 +48,9 @@ public class VideoUtils : InteractionModuleBase
 			if (!string.IsNullOrEmpty(trimStartString)) trimStart = TimeSpanFromHMS(trimStartString);
 			if (!string.IsNullOrEmpty(trimEndString)) trimEnd = TimeSpanFromHMS(trimEndString);
 		}
-		catch (Exception e)
+		catch (ArgumentException)
 		{
-			if (e is ArgumentException)
-			{
-				await FollowupAsync("Invalid time format. Please provide a valid time format (XXh XXm XXs XXms).", ephemeral: true);
-			}
-			else
-			{
-				throw;
-			}
+			await FollowupAsync("Invalid time format. Please provide a valid time format (XXh XXm XXs XXms).", ephemeral: true);
 			return;
 		}
 
