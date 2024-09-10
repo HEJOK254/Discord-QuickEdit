@@ -18,8 +18,9 @@ public class VideoUtils : InteractionModuleBase
 		[Summary(description: "A message to send with the video when it's trimmed")] string message = "",
 		[Summary(description: "If the video should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
 	{
-		string videoInputPath = "./tmp/input.mp4";      // Normally, I would use Path.GetTempFileName(), but FFMpegCore doesn't seem to
-		string videoOutputPath = "./tmp/output.mp4";    // like the .tmp file extension (or anything other than .mp4) as far as i know
+		string tempDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
+		string videoInputPath = Path.Combine(tempDirPath, "input.mp4");      // Normally, I would use Path.GetTempFileName(), but FFMpegCore doesn't seem to
+		string videoOutputPath = Path.Combine(tempDirPath, "output.mp4");    // like the .tmp file extension (or anything other than .mp4) as far as i know
 
 		// Achknowledge the command
 		await DeferAsync(ephemeral);
@@ -72,9 +73,9 @@ public class VideoUtils : InteractionModuleBase
 		}
 
 		// Check if the temporary directory, where the video is supposed to be exists
-		if (!Directory.Exists("./tmp"))
+		if (!Directory.Exists(tempDirPath))
 		{
-			Directory.CreateDirectory("./tmp");
+			Directory.CreateDirectory(tempDirPath);
 			Log.Information("TMP directory not found. Created it automatically");
 		}
 
