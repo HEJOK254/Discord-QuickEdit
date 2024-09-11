@@ -20,7 +20,27 @@ internal class Program
 	{
 		SerilogConfiguration.ConfigureLogger();
 
-		AppDomain.CurrentDomain.ProcessExit += (s, e) => Log.CloseAndFlush();
+		// Handle exit
+		AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+			{
+				Log.Debug("Stopping program gracefully");
+				try
+				{
+					if (client == null) return;
+					Log.Debug("Stopping bot");
+					client.LogoutAsync().Wait();
+					client.StopAsync().Wait();
+					Log.Debug("Stopped bot");
+				}
+				catch (Exception ex)
+				{
+					Log.Error("Error while trying to stop bot\n{e}", ex);
+				}
+				finally
+				{
+					Log.CloseAndFlush();
+				}
+			};
 
 		ShowStartMessage();
 
