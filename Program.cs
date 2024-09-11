@@ -1,6 +1,7 @@
 using Discord;
 using Discord.WebSocket;
 using FFMpegCore;
+using FFMpegCore.Exceptions;
 using FFMpegCore.Helpers;
 using QuickEdit.Commands;
 using QuickEdit.Logger;
@@ -13,7 +14,6 @@ internal class Program
 	public static DiscordSocketClient? client;
 	public static Config? config;
 	public static readonly DiscordSocketConfig socketConfig = new() { GatewayIntents = GatewayIntents.None };
-
 	public static Task Main(string[] args) => new Program().MainAsync();
 
 	public async Task MainAsync()
@@ -53,6 +53,26 @@ internal class Program
 		{
 			Log.Fatal("Failed to GetConfig()");
 			Environment.ExitCode = 1; // Exit without triggering DeepSource lol
+			return;
+		}
+
+		try
+		{
+			FFMpegHelper.VerifyFFMpegExists(GlobalFFOptions.Current);
+			Log.Debug("Found FFMpeg");
+		}
+		catch (FFMpegException)
+		{
+			Log.Fatal("FFMpeg not found.");
+			Environment.ExitCode = 1;
+			return;
+		}
+		catch (Exception e)
+		{
+			// It seems that there might be a bug in FFMpegCore, causing VerifyFFMpegExists() to
+			// fail before it can throw the correct exception, which causes a different exception. 
+			Log.Fatal("FFMpeg verification resulted in a failure:\n{Message}", e);
+			Environment.ExitCode = 1;
 			return;
 		}
 
