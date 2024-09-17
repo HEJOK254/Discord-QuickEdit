@@ -1,5 +1,6 @@
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
+using Discord.Interactions;
 using FFMpegCore;
 using FFMpegCore.Exceptions;
 using FFMpegCore.Helpers;
@@ -7,65 +8,99 @@ using QuickEdit.Commands;
 using QuickEdit.Logger;
 using Serilog;
 
+using Serilog.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace QuickEdit;
 
 internal class Program
 {
-	public static DiscordSocketClient? client;
-	public static Config? config;
-	public static readonly DiscordSocketConfig socketConfig = new() { GatewayIntents = GatewayIntents.None };
-	public static Task Main(string[] args) => new Program().MainAsync();
+	private static readonly Config.DiscordConfig? discordConfig = new();
 
-	public async Task MainAsync()
+	public static Task Main(string[] args) => new Program().MainAsync(args);
+
+	public async Task MainAsync(string[] args)
 	{
+		// Configure Serilog first
 		SerilogConfiguration.ConfigureLogger();
-
-		// Handle exit
-		AppDomain.CurrentDomain.ProcessExit += (s, e) =>
-			{
-				Log.Debug("Stopping program gracefully");
-				try
-				{
-					if (client == null) return;
-					Log.Debug("Stopping bot");
-					client.LogoutAsync().Wait();
-					client.StopAsync().Wait();
-					Log.Debug("Stopped bot");
-				}
-				catch (Exception ex)
-				{
-					Log.Error("Error while trying to stop bot\n{e}", ex);
-				}
-				finally
-				{
-					Log.CloseAndFlush();
-				}
-			};
-
 		ShowStartMessage();
 
+		// Generic Host setup
+		HostApplicationBuilderSettings hostSettings = new()
+		{
+			Args = args,
+			Configuration = new ConfigurationManager(),
+			ContentRootPath = AppDomain.CurrentDomain.BaseDirectory
+		};
+
+		hostSettings.Configuration.AddJsonFile("config.json");
+		hostSettings.Configuration.AddCommandLine(args);
+
+		HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(hostSettings);
+		ConfigureServices(hostBuilder.Services);
+		hostBuilder.Configuration.GetRequiredSection(nameof(DiscordConfig))
+			.Bind(discordConfig);
+
+		using var host = hostBuilder.Build();
+
+		// Change log level after getting Config
 		try
 		{
-			config = Config.GetConfig();
-			SerilogConfiguration.LoggingLevel.MinimumLevel = config.debug ? Serilog.Events.LogEventLevel.Debug : Serilog.Events.LogEventLevel.Information;
+			SerilogConfiguration.LoggingLevel.MinimumLevel =
+				discordConfig!.Debug
+					? Serilog.Events.LogEventLevel.Debug
+					: Serilog.Events.LogEventLevel.Information;
 		}
-		catch
+		catch (Exception e)
 		{
-			Log.Fatal("Failed to GetConfig()");
+			Log.Fatal("Failed to set debugging level:\n{e}", e);
 			Environment.ExitCode = 1; // Exit without triggering DeepSource lol
 			return;
 		}
 
+		if (!CheckFFMpegExists()) return;
+
+		await host.RunAsync();
+	}
+
+	private static void ConfigureServices(IServiceCollection services)
+	{
+		var socketConfig = new DiscordSocketConfig()
+		{
+			GatewayIntents = GatewayIntents.None
+		};
+
+		var interactionServiceConfig = new InteractionServiceConfig()
+		{
+			UseCompiledLambda = true,
+			DefaultRunMode = RunMode.Async
+		};
+
+		services.AddSerilog();
+		services.AddSingleton(discordConfig!);
+		services.AddSingleton(socketConfig);
+		services.AddSingleton(interactionServiceConfig);
+		services.AddSingleton<DiscordSocketClient>();
+		services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>(), interactionServiceConfig));
+		services.AddSingleton<InteractionServiceHandler>();
+		services.AddHostedService<Bot>();
+	}
+
+	private static bool CheckFFMpegExists()
+	{
 		try
 		{
 			FFMpegHelper.VerifyFFMpegExists(GlobalFFOptions.Current);
 			Log.Debug("Found FFMpeg");
+			return true;
 		}
 		catch (FFMpegException)
 		{
 			Log.Fatal("FFMpeg not found.");
 			Environment.ExitCode = 1;
-			return;
+			return false;
 		}
 		catch (Exception e)
 		{
@@ -73,28 +108,8 @@ internal class Program
 			// fail before it can throw the correct exception, which causes a different exception. 
 			Log.Fatal("FFMpeg verification resulted in a failure:\n{Message}", e);
 			Environment.ExitCode = 1;
-			return;
+			return false;
 		}
-
-		client = new DiscordSocketClient(socketConfig);
-
-		client.Log += AutoLog.LogMessage;
-		client.Ready += OnReadyAsync;
-
-		await client.LoginAsync(TokenType.Bot, config.token);
-		await client.StartAsync();
-
-		// Custom activities use a different method
-		if (config.statusType == ActivityType.CustomStatus)
-		{
-			await client.SetCustomStatusAsync(config.status);
-		}
-		else
-		{
-			await client.SetGameAsync(config.status, null, config.statusType);
-		}
-
-		await Task.Delay(-1);
 	}
 
 	private static void ShowStartMessage()
@@ -104,19 +119,5 @@ internal class Program
 		var compileTime = new DateTime(Builtin.CompileTime, DateTimeKind.Utc); // Use a different method maybe
 
 		Console.WriteLine($"\u001b[36m ---- QuickEdit ver. {buildVer} - Build Date: {compileTime.ToUniversalTime()} UTC - By HEJOK254 ---- \u001b[0m");
-	}
-
-	private async Task OnReadyAsync()
-	{
-		try
-		{
-			await InteractionServiceHandler.InitAsync();
-		}
-		catch
-		{
-			Log.Fatal("Program is exiting due to an error in InteractionServiceHandler.");
-			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
-			Environment.Exit(1); // skipcq: CS-W1005
-		}
 	}
 }

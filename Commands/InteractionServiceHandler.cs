@@ -3,19 +3,30 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
 
+using QuickEdit.Config;
+
 namespace QuickEdit.Commands;
-public class InteractionServiceHandler
+internal sealed class InteractionServiceHandler
 {
-	private static readonly DiscordSocketClient? _client = Program.client;
-	private static InteractionService? _interactionService;
-	private static readonly InteractionServiceConfig _interactionServiceConfig = new() { UseCompiledLambda = true, DefaultRunMode = RunMode.Async };
+	private readonly DiscordSocketClient _client;
+	private InteractionService _interactionService;
+	private readonly InteractionServiceConfig _interactionServiceConfig;
+	private readonly Config.DiscordConfig _discordConfig;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
+
+	public InteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, Config.DiscordConfig discordConfig, InteractionServiceConfig interactionServiceConfig)
+	{
+		_client = client;
+		_interactionService = interactionService;
+		_discordConfig = discordConfig;
+		_interactionServiceConfig = interactionServiceConfig;
+	}
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	public static async Task InitAsync()
+	public async Task InitAsync()
 	{
 		await _initSemaphore.WaitAsync();
 
@@ -25,12 +36,6 @@ public class InteractionServiceHandler
 
 		try
 		{
-			if (_interactionService != null)
-			{
-				Log.Warning("Tried to Initialize the InteractionService after it has already been initialized");
-				return;
-			}
-
 			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
@@ -41,7 +46,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error initializing InteractionService: {e.Message}");
+			Log.Fatal("Error initializing InteractionService: {e}", e);
 			throw;
 		}
 		finally
@@ -53,7 +58,7 @@ public class InteractionServiceHandler
 	/// <summary>
 	/// Register modules / commands
 	/// </summary>
-	public static async Task RegisterModulesAsync()
+	public async Task RegisterModulesAsync()
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -76,12 +81,12 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
+			Log.Fatal("Error registering modules:\n{}", e);
 			throw;
 		}
 	}
 
-	public static async Task OnInteractionCreatedAsync(SocketInteraction interaction)
+	public async Task OnInteractionCreatedAsync(SocketInteraction interaction)
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -99,7 +104,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction: {e.Message}");
+			Log.Error("Error handling interaction:\n{e}", e);
 
 			if (interaction.Type is InteractionType.ApplicationCommand)
 			{
@@ -118,12 +123,12 @@ public class InteractionServiceHandler
 
 		try
 		{
-			Log.Error($"Error handling interaction: {result.Error}");
+			Log.Error("Error handling interaction: {result.Error}", result);
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
+			Log.Error("Error handling interaction exception bruh:\n{e}", e);
 			throw;
 		}
 	}
