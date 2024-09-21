@@ -3,8 +3,6 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
 
-using QuickEdit.Config;
-
 namespace QuickEdit.Commands;
 internal sealed class InteractionServiceHandler
 {
@@ -36,7 +34,7 @@ internal sealed class InteractionServiceHandler
 
 		try
 		{
-			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
+			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
 			// Can't simply get the result of the ExecuteCommandAsync, because of RunMode.Async
