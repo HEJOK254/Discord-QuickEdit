@@ -15,15 +15,13 @@ internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHand
 	private readonly DiscordSocketClient _client;
 	private InteractionService _interactionService;
 	private readonly InteractionServiceConfig _interactionServiceConfig;
-	private readonly Config.DiscordConfig _discordConfig;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
 
-	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, Config.DiscordConfig discordConfig, InteractionServiceConfig interactionServiceConfig)
+	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig)
 	{
 		_client = client;
 		_interactionService = interactionService;
-		_discordConfig = discordConfig;
 		_interactionServiceConfig = interactionServiceConfig;
 	}
 
