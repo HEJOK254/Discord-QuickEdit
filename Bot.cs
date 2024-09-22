@@ -7,11 +7,11 @@ using Serilog;
 
 namespace QuickEdit;
 
-internal sealed class Bot(DiscordSocketClient client, Config.DiscordConfig discordConfig, InteractionServiceHandler interactionServiceHandler, IHostApplicationLifetime appLifetime) : IHostedService
+internal sealed class Bot(DiscordSocketClient client, Config.DiscordConfig discordConfig, IInteractionServiceHandler interactionServiceHandler, IHostApplicationLifetime appLifetime) : IHostedService
 {
 	private readonly DiscordSocketClient _client = client;
 	private readonly Config.DiscordConfig _discordConfig = discordConfig;
-	private readonly InteractionServiceHandler _interactionServiceHandler = interactionServiceHandler;
+	private readonly IInteractionServiceHandler _interactionServiceHandler = interactionServiceHandler;
 	private readonly IHostApplicationLifetime _appLifetime = appLifetime;
 
 	public async Task StartAsync(CancellationToken cancellationToken)

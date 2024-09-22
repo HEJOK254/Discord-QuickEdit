@@ -4,7 +4,13 @@ using Discord.WebSocket;
 using Serilog;
 
 namespace QuickEdit.Commands;
-internal sealed class InteractionServiceHandler
+
+internal interface IInteractionServiceHandler
+{
+	Task InitAsync();
+}
+
+internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHandler
 {
 	private readonly DiscordSocketClient _client;
 	private InteractionService _interactionService;
@@ -13,7 +19,7 @@ internal sealed class InteractionServiceHandler
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
 
-	public InteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, Config.DiscordConfig discordConfig, InteractionServiceConfig interactionServiceConfig)
+	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, Config.DiscordConfig discordConfig, InteractionServiceConfig interactionServiceConfig)
 	{
 		_client = client;
 		_interactionService = interactionService;
@@ -56,7 +62,7 @@ internal sealed class InteractionServiceHandler
 	/// <summary>
 	/// Register modules / commands
 	/// </summary>
-	public async Task RegisterModulesAsync()
+	private async Task RegisterModulesAsync()
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -84,7 +90,7 @@ internal sealed class InteractionServiceHandler
 		}
 	}
 
-	public async Task OnInteractionCreatedAsync(SocketInteraction interaction)
+	private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -113,7 +119,7 @@ internal sealed class InteractionServiceHandler
 		}
 	}
 
-	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
+	private static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
 	{
 		// Only trying to handle errors lol
 		if (result.IsSuccess)
