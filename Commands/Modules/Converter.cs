@@ -15,20 +15,22 @@ namespace QuickEdit.Commands.Modules
         {
             { ".mp4", async (input, output, fps) => await ConvertVideoToGif(input, output, fps) },
             { ".png", async (input, output, fps) => await ConvertImage(input, output) },
+            { ".jpg", async (input, output, fps) => await ConvertImage(input, output) },
             { ".webp", async (input, output, fps) => await ConvertImage(input, output) },
             { ".bmp", async (input, output, fps) => await ConvertImage(input, output) },
+            { ".gif", async (input, output, fps) => await ConvertVideoToGif(input, output, fps) },
         };
 
         [SlashCommand("convert", "Convert a file format to another one")]
         public async Task ConvertAsync(
             [Summary(description: "The video or image to convert")] Discord.Attachment attachment,
-            [Summary("format", description: "The desired output format (e.g., jpg, gif, mp4, etc.)")] string outputFormat = "",
+            [Choice("gif", ".gif"), Choice("png", ".png"), Choice("jpg", ".jpg"), Choice("webp", ".webp"), Choice("bmp", ".bmp"), Choice("mp4", ".mp4")] string outputFormat,
             [Summary("fps", description: "If using Gif, what fps should it have")] int fps = 30,
             [Summary(description: "A message to send with the converted file")] string message = "",
             [Summary(description: "If the file should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
         {
             string tempDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
-            string videoInputPath = Path.Combine(tempDirPath, "input" + Path.GetExtension(attachment.Filename).ToLowerInvariant());
+            string inputFilePath = Path.Combine(tempDirPath, "input" + Path.GetExtension(attachment.Filename).ToLowerInvariant());
             string outputFilePath = Path.Combine(tempDirPath, "output." + outputFormat);
 
             // Acknowledge the command
@@ -40,21 +42,27 @@ namespace QuickEdit.Commands.Modules
                 Log.Information("TMP directory not found. Created it automatically");
             }
 
-            await DownloadFileAsync(attachment.Url, videoInputPath);
+            await DownloadFileAsync(attachment.Url, inputFilePath);
 
             string extension = Path.GetExtension(attachment.Filename).ToLowerInvariant();
+
             try
             {
                 if (conversionMap.ContainsKey(extension))
                 {
-                    await conversionMap[extension](videoInputPath, outputFilePath, fps);
+                    if (Path.GetExtension(inputFilePath) != outputFormat) {
+                        await conversionMap[extension](inputFilePath, outputFilePath, fps);
+                    } else {
+                        await FollowupAsync($"Silly, you are converting from {extension}" + " to " + outputFormat, ephemeral: ephemeral);
+                        return;
+                    }
                 }
                 else
                 {
                     await FollowupAsync("Unsupported conversion type.", ephemeral: ephemeral);
                     return;
                 }
-                await FollowupWithFileAsync(outputFilePath, "output." + outputFormat, message, ephemeral: ephemeral);
+                await FollowupWithFileAsync(outputFilePath, "output" + outputFormat, message, ephemeral: ephemeral);
             }
             catch (Exception ex)
             {
@@ -62,7 +70,7 @@ namespace QuickEdit.Commands.Modules
             }
             finally
             {
-                File.Delete(videoInputPath);
+                File.Delete(inputFilePath);
                 File.Delete(outputFilePath);
             }
         }
