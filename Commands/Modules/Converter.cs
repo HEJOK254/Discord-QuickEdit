@@ -4,13 +4,12 @@ using FFMpegCore;
 using Serilog;
 using SixLabors.ImageSharp;
 
-namespace QuickEdit.Commands.Modules
+namespace QuickEdit.Commands.Modules;
+[Group("file", "File stuff")]
+[IntegrationType(ApplicationIntegrationType.UserInstall)]
+[CommandContextType(InteractionContextType.Guild, InteractionContextType.PrivateChannel)]
+public class Converter : InteractionModuleBase
 {
-    [Group("file", "File stuff")]
-    [IntegrationType(ApplicationIntegrationType.UserInstall)]
-    [CommandContextType(InteractionContextType.Guild, InteractionContextType.PrivateChannel)]
-    public class Converter : InteractionModuleBase
-    {
         private static readonly Dictionary<string, Func<string, string, int, Task>> conversionMap = new()
         {
             { ".mp4", async (input, output, fps) => await ConvertVideoToGif(input, output, fps) },
@@ -44,29 +43,32 @@ namespace QuickEdit.Commands.Modules
 
             await DownloadFileAsync(attachment.Url, inputFilePath);
 
+            
+
             string extension = Path.GetExtension(attachment.Filename).ToLowerInvariant();
 
             try
             {
-                if (conversionMap.ContainsKey(extension))
+                if (conversionMap.TryGetValue(extension, out var converter))
                 {
-                    if (Path.GetExtension(inputFilePath) != outputFormat) {
-                        await conversionMap[extension](inputFilePath, outputFilePath, fps);
-                    } else {
-                        await FollowupAsync($"Silly, you are converting from {extension}" + " to " + outputFormat, ephemeral: ephemeral);
+                    if (Path.GetExtension(inputFilePath) != outputFormat)
+                    {
+                        await converter(inputFilePath, outputFilePath, fps);
+                    } else { 
+                        await FollowupAsync($"Silly, you are converting from {extension} to {outputFormat}.", ephemeral: ephemeral);
                         return;
                     }
-                }
-                else
-                {
+                } else {
                     await FollowupAsync("Unsupported conversion type.", ephemeral: ephemeral);
                     return;
                 }
-                await FollowupWithFileAsync(outputFilePath, "output" + outputFormat, message, ephemeral: ephemeral);
+
+                await FollowupWithFileAsync(outputFilePath, $"output{outputFormat}", message, ephemeral: ephemeral);
             }
             catch (Exception ex)
             {
-                await RespondAsync($"An error occurred during conversion: {ex.Message}", ephemeral: ephemeral);
+                Log.Error($"An error occurred during conversion: {ex.Message}");
+                await FollowupAsync("An error occurred during the conversion process.", ephemeral: ephemeral);
             }
             finally
             {
@@ -92,10 +94,8 @@ namespace QuickEdit.Commands.Modules
 
         private static async Task ConvertImage(string inputFilePath, string outputFilePath)
         {
-            using (var image = SixLabors.ImageSharp.Image.Load(inputFilePath))
-            {
-                string extension = Path.GetExtension(outputFilePath).ToLowerInvariant();
-
+            using var image = SixLabors.ImageSharp.Image.Load(inputFilePath);
+            string extension = Path.GetExtension(outputFilePath).ToLowerInvariant();
                 switch (extension)
                 {
                     case ".jpg":
@@ -115,15 +115,13 @@ namespace QuickEdit.Commands.Modules
                         throw new NotSupportedException($"The format '{extension}' is not supported.");
                 }
             }
-        }
-
-        private static async Task DownloadFileAsync(string uri, string path)
-        {
-            using var client = new HttpClient();
-            using var s = await client.GetStreamAsync(uri);
-            using var fs = new FileStream(path, FileMode.OpenOrCreate);
-            await s.CopyToAsync(fs);
-            fs.Close();
-        }
+    private static async Task DownloadFileAsync(string uri, string path)
+    {
+        using var client = new HttpClient();
+        using var s = await client.GetStreamAsync(uri);
+        using var fs = new FileStream(path, FileMode.OpenOrCreate);
+        await s.CopyToAsync(fs);
+        fs.Close();
     }
 }
+
