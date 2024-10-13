@@ -36,9 +36,9 @@ public class Converter : InteractionModuleBase
         [Summary(description: "A message to send with the converted file")] string message = "",
         [Summary(description: "If the file should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
     {
-        string tempDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
-        string inputFilePath = Path.Combine(tempDirPath, "input" + Path.GetExtension(attachment.Filename).ToLowerInvariant());
-        string outputFilePath = Path.Combine(tempDirPath, "output." + outputFormat);
+        string tempDirPath = Path.GetTempPath();
+        string inputFilePath = Path.GetTempFileName();
+        string outputFilePath = Path.Combine(tempDirPath, inputFilePath + outputFormat);
 
         // Acknowledge the command
         await DeferAsync(ephemeral);
@@ -50,7 +50,6 @@ public class Converter : InteractionModuleBase
         }
 
         await DownloadFileAsync(attachment.Url, inputFilePath);
-        string extension = Path.GetExtension(attachment.Filename).ToLowerInvariant();
 
         try
         {
@@ -62,7 +61,7 @@ public class Converter : InteractionModuleBase
                 }
                 else
                 {
-                    await FollowupAsync($"Silly, you are converting from {extension} to {outputFormat}.", ephemeral: ephemeral);
+                    await FollowupAsync($"Silly, you are converting from {Path.GetExtension(inputFilePath)} to {outputFormat}.", ephemeral: ephemeral);
                     return;
                 }
             }
@@ -81,8 +80,8 @@ public class Converter : InteractionModuleBase
         }
         finally
         {
-            File.Delete(inputFilePath);
-            File.Delete(outputFilePath);
+           File.Delete(inputFilePath);
+           File.Delete(outputFilePath);
         }
     }
 
