@@ -4,18 +4,31 @@ using Discord.WebSocket;
 using Serilog;
 
 namespace QuickEdit.Commands;
-public class InteractionServiceHandler
+
+internal interface IInteractionServiceHandler
 {
-	private static readonly DiscordSocketClient? _client = Program.client;
-	private static InteractionService? _interactionService;
-	private static readonly InteractionServiceConfig _interactionServiceConfig = new() { UseCompiledLambda = true, DefaultRunMode = RunMode.Async };
+	Task InitAsync();
+}
+
+internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHandler
+{
+	private readonly DiscordSocketClient _client;
+	private InteractionService _interactionService;
+	private readonly InteractionServiceConfig _interactionServiceConfig;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
+
+	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig)
+	{
+		_client = client;
+		_interactionService = interactionService;
+		_interactionServiceConfig = interactionServiceConfig;
+	}
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	public static async Task InitAsync()
+	public async Task InitAsync()
 	{
 		await _initSemaphore.WaitAsync();
 
@@ -25,13 +38,7 @@ public class InteractionServiceHandler
 
 		try
 		{
-			if (_interactionService != null)
-			{
-				Log.Warning("Tried to Initialize the InteractionService after it has already been initialized");
-				return;
-			}
-
-			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
+			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
 			// Can't simply get the result of the ExecuteCommandAsync, because of RunMode.Async
@@ -41,7 +48,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error initializing InteractionService: {e.Message}");
+			Log.Fatal("Error initializing InteractionService: {e}", e);
 			throw;
 		}
 		finally
@@ -53,7 +60,7 @@ public class InteractionServiceHandler
 	/// <summary>
 	/// Register modules / commands
 	/// </summary>
-	public static async Task RegisterModulesAsync()
+	private async Task RegisterModulesAsync()
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -76,12 +83,12 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
+			Log.Fatal("Error registering modules:\n{}", e);
 			throw;
 		}
 	}
 
-	public static async Task OnInteractionCreatedAsync(SocketInteraction interaction)
+	private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -99,7 +106,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction: {e.Message}");
+			Log.Error("Error handling interaction:\n{e}", e);
 
 			if (interaction.Type is InteractionType.ApplicationCommand)
 			{
@@ -110,7 +117,7 @@ public class InteractionServiceHandler
 		}
 	}
 
-	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
+	private static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
 	{
 		// Only trying to handle errors lol
 		if (result.IsSuccess)
@@ -118,12 +125,12 @@ public class InteractionServiceHandler
 
 		try
 		{
-			Log.Error($"Error handling interaction: {result.Error}");
+			Log.Error("Error handling interaction: {result.Error}", result);
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
+			Log.Error("Error handling interaction exception bruh:\n{e}", e);
 			throw;
 		}
 	}
