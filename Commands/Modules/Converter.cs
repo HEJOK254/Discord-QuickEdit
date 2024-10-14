@@ -36,19 +36,11 @@ public class Converter : InteractionModuleBase
         [Summary(description: "A message to send with the converted file")] string message = "",
         [Summary(description: "If the file should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
     {
-        string tempDirPath = Path.GetTempPath();
         string inputFilePath = Path.GetTempFileName();
-        string outputFilePath = Path.Combine(tempDirPath, inputFilePath + outputFormat);
+        string outputFilePath = Path.Combine(Path.GetTempPath(), inputFilePath + outputFormat);
 
         // Acknowledge the command
         await DeferAsync(ephemeral);
-
-        if (!Directory.Exists(tempDirPath))
-        {
-            Directory.CreateDirectory(tempDirPath);
-            Log.Information("TMP directory not found. Created it automatically");
-        }
-
         await DownloadFileAsync(attachment.Url, inputFilePath);
 
         try
