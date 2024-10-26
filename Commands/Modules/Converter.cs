@@ -13,25 +13,28 @@ public class Converter : InteractionModuleBase
 {
     private static readonly Dictionary<string, Func<string, string, int, Task>> conversionMap = new()
     {
-        // Video formats
-        { ".mp4", async (input, output, fps) => await ConvertVideo(input, output) },
-        { ".avi", async (input, output, fps) => await ConvertVideo(input, output) },
-        { ".mov", async (input, output, fps) => await ConvertVideo(input, output) },
-        { ".mkv", async (input, output, fps) => await ConvertVideo(input, output) },
-        { ".gif", async (input, output, fps) => await ConvertVideoToGif(input, output, fps) },
-        
-        // Image formats
-        { ".png", async (input, output, fps) => await ConvertImage(input, output) },
-        { ".jpg", async (input, output, fps) => await ConvertImage(input, output) },
-        { ".webp", async (input, output, fps) => await ConvertImage(input, output) },
-        { ".bmp", async (input, output, fps) => await ConvertImage(input, output) },
-        { ".tiff", async (input, output, fps) => await ConvertImage(input, output) },
+    // Video formats
+    { ".mp4", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".avi", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".mov", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".mkv", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".gif", async (input, output, fps) => await ConvertVideoToGif(input, output, fps) },
+    { ".wmv", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".flv", async (input, output, fps) => await ConvertVideo(input, output) },
+    { ".mpg", async (input, output, fps) => await ConvertVideo(input, output) },
+    
+    // Image formats
+    { ".png", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".jpg", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".webp", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".bmp", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".tiff", async (input, output, fps) => await ConvertImage(input, output) }
     };
 
     [SlashCommand("convert", "Convert a file format to another one")]
     public async Task ConvertAsync(
         [Summary(description: "The video or image to convert")] Discord.Attachment attachment,
-        [Choice("gif", ".gif"), Choice("mp4", ".mp4"), Choice("avi", ".avi"), Choice("mov", ".mov"), Choice("mkv", ".mkv"), Choice("png", ".png"), Choice("jpg", ".jpg"), Choice("webp", ".webp"), Choice("bmp", ".bmp"), Choice("tiff", ".tiff")] string outputFormat,
+        [Choice("gif", ".gif"), Choice("mp4", ".mp4"), Choice("avi", ".avi"), Choice("mov", ".mov"), Choice("mkv", ".mkv"), Choice("png", ".png"), Choice("jpg", ".jpg"), Choice("webp", ".webp"), Choice("bmp", ".bmp"), Choice("tiff", ".tiff"), Choice("wmv", ".wmv"), Choice("flv", ".flv"), Choice("mpg", ".mpg")] string outputFormat,
         [Summary("fps", description: "If using Gif, what fps should it have")] int fps = 30,
         [Summary(description: "A message to send with the converted file")] string message = "",
         [Summary(description: "If the file should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
