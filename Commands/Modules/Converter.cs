@@ -28,13 +28,16 @@ public class Converter : InteractionModuleBase
     { ".jpg", async (input, output, fps) => await ConvertImage(input, output) },
     { ".webp", async (input, output, fps) => await ConvertImage(input, output) },
     { ".bmp", async (input, output, fps) => await ConvertImage(input, output) },
-    { ".tiff", async (input, output, fps) => await ConvertImage(input, output) }
+    { ".tiff", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".pbm", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".tga", async (input, output, fps) => await ConvertImage(input, output) },
+    { ".qoi", async (input, output, fps) => await ConvertImage(input, output) }
     };
 
     [SlashCommand("convert", "Convert a file format to another one")]
     public async Task ConvertAsync(
         [Summary(description: "The video or image to convert")] Discord.Attachment attachment,
-        [Choice("gif", ".gif"), Choice("mp4", ".mp4"), Choice("avi", ".avi"), Choice("mov", ".mov"), Choice("mkv", ".mkv"), Choice("png", ".png"), Choice("jpg", ".jpg"), Choice("webp", ".webp"), Choice("bmp", ".bmp"), Choice("tiff", ".tiff"), Choice("wmv", ".wmv"), Choice("flv", ".flv"), Choice("mpg", ".mpg")] string outputFormat,
+        [Choice("gif", ".gif"), Choice("mp4", ".mp4"), Choice("mpg", ".mpg"), Choice("avi", ".avi"), Choice("mov", ".mov"), Choice("mkv", ".mkv"), Choice("png", ".png"), Choice("jpg", ".jpg"), Choice("webp", ".webp"), Choice("bmp", ".bmp"), Choice("tiff", ".tiff"), Choice("wmv", ".wmv"), Choice("flv", ".flv"), Choice("pbm", ".pbm"), Choice("tga", ".tga"), Choice("qoi", ".qoi")] string outputFormat,
         [Summary("fps", description: "If using Gif, what fps should it have")] int fps = 30,
         [Summary(description: "A message to send with the converted file")] string message = "",
         [Summary(description: "If the file should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
@@ -126,6 +129,15 @@ public class Converter : InteractionModuleBase
                 break;
             case ".tiff":
                 await Task.Run(() => image.SaveAsTiff(outputFilePath));
+                break;
+            case ".pbm":
+                await Task.Run(() => image.SaveAsPbm(outputFilePath));
+                break;
+            case ".tga":
+                await Task.Run(() => image.SaveAsTga(outputFilePath));
+                break;
+            case ".qoi":
+                await Task.Run(() => image.SaveAsQoi(outputFilePath));
                 break;
             default:
                 throw new NotSupportedException($"The format '{extension}' is not supported.");
