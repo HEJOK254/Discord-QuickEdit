@@ -10,20 +10,13 @@ internal interface IInteractionServiceHandler
 	Task InitAsync();
 }
 
-internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHandler
+internal sealed class DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig) : IInteractionServiceHandler
 {
-	private readonly DiscordSocketClient _client;
-	private InteractionService _interactionService;
-	private readonly InteractionServiceConfig _interactionServiceConfig;
+	private readonly DiscordSocketClient _client = client;
+	private InteractionService _interactionService = interactionService;
+	private readonly InteractionServiceConfig _interactionServiceConfig = interactionServiceConfig;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
-
-	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig)
-	{
-		_client = client;
-		_interactionService = interactionService;
-		_interactionServiceConfig = interactionServiceConfig;
-	}
 
 	/// <summary>
 	/// Initialize the InteractionService
