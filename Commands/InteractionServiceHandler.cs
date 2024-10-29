@@ -127,7 +127,7 @@ internal sealed class InteractionServiceHandler(DiscordSocketClient client, Inte
 
 		try
 		{
-			Log.Error("Error handling interaction: {result.Error}", result);
+			Log.Error("Error handling interaction: {Error}", result.Error); // TODO: Somehow get more information about the error
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
