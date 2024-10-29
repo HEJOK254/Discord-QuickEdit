@@ -1,31 +1,39 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace QuickEdit.Commands;
-
-internal interface IInteractionServiceHandler
-{
-	Task InitAsync();
-}
-
-internal sealed class DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig) : IInteractionServiceHandler
+internal sealed class InteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig, IHostApplicationLifetime appLifetime) : IHostedService
 {
 	private readonly DiscordSocketClient _client = client;
 	private InteractionService _interactionService = interactionService;
 	private readonly InteractionServiceConfig _interactionServiceConfig = interactionServiceConfig;
+	private readonly IHostApplicationLifetime _appLifetime = appLifetime;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
+
+	public Task StartAsync(CancellationToken cancellationToken)
+	{
+		_client.Ready += InitAsync;
+		return Task.CompletedTask;
+	}
+
+	public Task StopAsync(CancellationToken cancellationToken)
+	{
+		_interactionService?.Dispose();
+		return Task.CompletedTask;
+	}
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	public async Task InitAsync()
+	private async Task InitAsync()
 	{
 		await _initSemaphore.WaitAsync();
 
-		// Prevent reinitialization
+		// Prevent re-initialization
 		if (isReady)
 			return;
 
@@ -42,7 +50,8 @@ internal sealed class DefaultInteractionServiceHandler(DiscordSocketClient clien
 		catch (Exception e)
 		{
 			Log.Fatal("Error initializing InteractionService: {e}", e);
-			throw;
+			Environment.ExitCode = 1; // TODO: Maybe implement different exit codes in the future
+			_appLifetime.StopApplication();
 		}
 		finally
 		{

@@ -90,7 +90,7 @@ internal class Program
 			services.AddSingleton(interactionServiceConfig);
 			services.AddSingleton<DiscordSocketClient>();
 			services.AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>(), interactionServiceConfig));
-			services.AddSingleton<IInteractionServiceHandler, DefaultInteractionServiceHandler>();
+			services.AddHostedService<InteractionServiceHandler>();
 			services.AddHostedService<Bot>();
 			return true;
 		}

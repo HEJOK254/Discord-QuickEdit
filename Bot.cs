@@ -7,17 +7,15 @@ using Serilog;
 
 namespace QuickEdit;
 
-internal sealed class Bot(DiscordSocketClient client, Config.DiscordConfig discordConfig, IInteractionServiceHandler interactionServiceHandler, IHostApplicationLifetime appLifetime) : IHostedService
+internal sealed class Bot(DiscordSocketClient client, Config.DiscordConfig discordConfig, IHostApplicationLifetime appLifetime) : IHostedService
 {
 	private readonly DiscordSocketClient _client = client;
 	private readonly Config.DiscordConfig _discordConfig = discordConfig;
-	private readonly IInteractionServiceHandler _interactionServiceHandler = interactionServiceHandler;
 	private readonly IHostApplicationLifetime _appLifetime = appLifetime;
 
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{
 		_client.Log += AutoLog.LogMessage;
-		_client.Ready += OnReadyAsync;
 
 		// Try-catch ValidateToken since LoginAsync doesn't throw exceptions, they just catch them
 		// So there's no way to know if the token is invalid without checking it first (or is there?)
@@ -65,20 +63,5 @@ internal sealed class Bot(DiscordSocketClient client, Config.DiscordConfig disco
 	{
 		await _client.LogoutAsync();
 		await _client.StopAsync();
-	}
-
-	private async Task OnReadyAsync()
-	{
-		try
-		{
-			await _interactionServiceHandler.InitAsync();
-		}
-		catch
-		{
-			Log.Fatal("Program is exiting due to an error in InteractionServiceHandler.");
-			// The program cannot continue without the InteractionService, so terminate it. Nothing important should be running at this point.
-			Environment.ExitCode = 1;
-			_appLifetime.StopApplication();
-		}
 	}
 }
