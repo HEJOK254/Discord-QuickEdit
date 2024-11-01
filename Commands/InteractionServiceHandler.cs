@@ -33,12 +33,11 @@ internal sealed class InteractionServiceHandler(DiscordSocketClient client, Inte
 	{
 		await _initSemaphore.WaitAsync();
 
-		// Prevent re-initialization
-		if (isReady)
-			return;
-
 		try
 		{
+			// Prevent re-initialization
+			if (isReady) return;
+
 			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
