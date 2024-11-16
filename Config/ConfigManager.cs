@@ -1,6 +1,4 @@
-using Discord;
 using Serilog;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
