@@ -1,37 +1,44 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace QuickEdit.Commands;
-public class InteractionServiceHandler
+internal sealed class InteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig, IHostApplicationLifetime appLifetime) : IHostedService
 {
-	private static readonly DiscordSocketClient? _client = Program.client;
-	private static InteractionService? _interactionService;
-	private static readonly InteractionServiceConfig _interactionServiceConfig = new() { UseCompiledLambda = true, DefaultRunMode = RunMode.Async };
+	private readonly DiscordSocketClient _client = client;
+	private InteractionService _interactionService = interactionService;
+	private readonly InteractionServiceConfig _interactionServiceConfig = interactionServiceConfig;
+	private readonly IHostApplicationLifetime _appLifetime = appLifetime;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
+
+	public Task StartAsync(CancellationToken cancellationToken)
+	{
+		_client.Ready += InitAsync;
+		return Task.CompletedTask;
+	}
+
+	public Task StopAsync(CancellationToken cancellationToken)
+	{
+		_interactionService?.Dispose();
+		return Task.CompletedTask;
+	}
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	public static async Task InitAsync()
+	private async Task InitAsync()
 	{
 		await _initSemaphore.WaitAsync();
 
-		// Prevent reinitialization
-		if (isReady)
-			return;
-
 		try
 		{
-			if (_interactionService != null)
-			{
-				Log.Warning("Tried to Initialize the InteractionService after it has already been initialized");
-				return;
-			}
+			// Prevent re-initialization
+			if (isReady) return;
 
-			_interactionService = new InteractionService(_client!.Rest, _interactionServiceConfig);
+			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
 			// Can't simply get the result of the ExecuteCommandAsync, because of RunMode.Async
@@ -41,8 +48,9 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error initializing InteractionService: {e.Message}");
-			throw;
+			Log.Fatal("Error initializing InteractionService: {e}", e);
+			Environment.ExitCode = 1; // TODO: Maybe implement different exit codes in the future
+			_appLifetime.StopApplication();
 		}
 		finally
 		{
@@ -53,7 +61,7 @@ public class InteractionServiceHandler
 	/// <summary>
 	/// Register modules / commands
 	/// </summary>
-	public static async Task RegisterModulesAsync()
+	private async Task RegisterModulesAsync()
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -76,12 +84,12 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Fatal($"Error registering modules: {(Program.config != null && Program.config.debug ? e : e.Message)}");
+			Log.Fatal("Error registering modules:\n{}", e);
 			throw;
 		}
 	}
 
-	public static async Task OnInteractionCreatedAsync(SocketInteraction interaction)
+	private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
 	{
 		// The service might not have been initialized yet
 		if (_interactionService == null)
@@ -99,7 +107,7 @@ public class InteractionServiceHandler
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction: {e.Message}");
+			Log.Error("Error handling interaction:\n{e}", e);
 
 			if (interaction.Type is InteractionType.ApplicationCommand)
 			{
@@ -110,7 +118,7 @@ public class InteractionServiceHandler
 		}
 	}
 
-	public static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
+	private static async Task OnSlashCommandExecutedAsync(SlashCommandInfo commandInfo, IInteractionContext interactionContext, IResult result)
 	{
 		// Only trying to handle errors lol
 		if (result.IsSuccess)
@@ -118,12 +126,12 @@ public class InteractionServiceHandler
 
 		try
 		{
-			Log.Error($"Error handling interaction: {result.Error}");
+			Log.Error("Error handling interaction: {Error}", result.Error); // TODO: Somehow get more information about the error
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
 		{
-			Log.Error($"Error handling interaction exception bruh: {e.ToString()}");
+			Log.Error("Error handling interaction exception bruh:\n{e}", e);
 			throw;
 		}
 	}
