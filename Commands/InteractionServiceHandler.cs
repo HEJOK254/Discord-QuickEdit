@@ -1,43 +1,43 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace QuickEdit.Commands;
-
-internal interface IInteractionServiceHandler
+internal sealed class InteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig, IHostApplicationLifetime appLifetime) : IHostedService
 {
-	Task InitAsync();
-}
-
-internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHandler
-{
-	private readonly DiscordSocketClient _client;
-	private InteractionService _interactionService;
-	private readonly InteractionServiceConfig _interactionServiceConfig;
+	private readonly DiscordSocketClient _client = client;
+	private InteractionService _interactionService = interactionService;
+	private readonly InteractionServiceConfig _interactionServiceConfig = interactionServiceConfig;
+	private readonly IHostApplicationLifetime _appLifetime = appLifetime;
 	private static readonly SemaphoreSlim _initSemaphore = new(1);
 	private static bool isReady = false;
 
-	public DefaultInteractionServiceHandler(DiscordSocketClient client, InteractionService interactionService, InteractionServiceConfig interactionServiceConfig)
+	public Task StartAsync(CancellationToken cancellationToken)
 	{
-		_client = client;
-		_interactionService = interactionService;
-		_interactionServiceConfig = interactionServiceConfig;
+		_client.Ready += InitAsync;
+		return Task.CompletedTask;
+	}
+
+	public Task StopAsync(CancellationToken cancellationToken)
+	{
+		_interactionService?.Dispose();
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
 	/// Initialize the InteractionService
 	/// </summary>
-	public async Task InitAsync()
+	private async Task InitAsync()
 	{
 		await _initSemaphore.WaitAsync();
 
-		// Prevent reinitialization
-		if (isReady)
-			return;
-
 		try
 		{
+			// Prevent re-initialization
+			if (isReady) return;
+
 			_interactionService = new InteractionService(_client.Rest, _interactionServiceConfig);
 			await RegisterModulesAsync();
 
@@ -49,7 +49,8 @@ internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHand
 		catch (Exception e)
 		{
 			Log.Fatal("Error initializing InteractionService: {e}", e);
-			throw;
+			Environment.ExitCode = 1; // TODO: Maybe implement different exit codes in the future
+			_appLifetime.StopApplication();
 		}
 		finally
 		{
@@ -125,7 +126,7 @@ internal sealed class DefaultInteractionServiceHandler : IInteractionServiceHand
 
 		try
 		{
-			Log.Error("Error handling interaction: {result.Error}", result);
+			Log.Error("Error handling interaction: {Error}", result.Error); // TODO: Somehow get more information about the error
 			await interactionContext.Interaction.FollowupAsync("An error occurred while executing the command.", ephemeral: true);
 		}
 		catch (Exception e)
