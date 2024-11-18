@@ -53,15 +53,12 @@ public class Converter : InteractionModuleBase
         {
             if (conversionMap.TryGetValue(outputFormat, out var converter))
             {
-                if (Path.GetExtension(inputFilePath) != outputFormat)
+                if (Path.GetExtension(attachment.Filename) == outputFormat)
                 {
-                    await converter(inputFilePath, outputFilePath, fps);
-                }
-                else
-                {
-                    await FollowupAsync($"Silly, you are converting from {Path.GetExtension(inputFilePath)} to {outputFormat}.", ephemeral: ephemeral);
+                    await FollowupAsync($"Silly, you are converting from {Path.GetExtension(attachment.Filename)} to {outputFormat}.", ephemeral: ephemeral);
                     return;
                 }
+                await converter(inputFilePath, outputFilePath, fps);
             }
             else
             {
