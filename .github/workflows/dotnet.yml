@@ -18,8 +18,7 @@ jobs:
         dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Setup problem matcher
-      uses: xt0rted/dotnet-format-problem-matcher@v1
+    - uses: hejok254/dotnet-format-problem-matcher@v1-beta
     - name: Format
       run: dotnet format 'Discord QuickEdit.sln' --verify-no-changes --verbosity diagnostic
 
