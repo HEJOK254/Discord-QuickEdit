@@ -19,7 +19,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Register Problem Matcher
-      uses: hejok254/dotnet-format-problem-matcher@v1-beta-1
+      uses: hejok254/dotnet-format-problem-matcher@v1-beta-2
     - name: Format
       run: dotnet format 'Discord QuickEdit.sln' --verify-no-changes --verbosity diagnostic
 
