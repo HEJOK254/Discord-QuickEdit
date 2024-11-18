@@ -9,6 +9,10 @@ using QuickEdit.Logger;
 using QuickEdit.Config;
 using Serilog;
 
+
+using QuickEdit;
+
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
