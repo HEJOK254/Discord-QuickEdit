@@ -19,7 +19,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Format
-      run: dotnet format --verify-no-changes --verbosity diagnostic
+      run: dotnet format 'Discord QuickEdit.sln' --verify-no-changes --verbosity diagnostic
 
   build:
 
