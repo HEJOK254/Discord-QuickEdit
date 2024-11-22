@@ -1,8 +1,8 @@
+using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
 using FFMpegCore;
 using Serilog;
-using System.Text.RegularExpressions;
 
 namespace QuickEdit.Commands.Modules;
 [Group("video", "Video utilities")]
