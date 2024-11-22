@@ -1,21 +1,17 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using Discord.Interactions;
+using Discord.WebSocket;
 using FFMpegCore;
 using FFMpegCore.Exceptions;
 using FFMpegCore.Helpers;
-using QuickEdit.Commands;
-using QuickEdit.Logger;
-using QuickEdit.Config;
-using Serilog;
-
-
-using QuickEdit;
-
-
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using QuickEdit;
+using QuickEdit.Commands;
+using QuickEdit.Config;
+using QuickEdit.Logger;
+using Serilog;
 
 namespace QuickEdit;
 
