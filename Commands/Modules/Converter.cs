@@ -51,20 +51,18 @@ public class Converter : InteractionModuleBase
 
         try
         {
-            if (conversionMap.TryGetValue(outputFormat, out var converter))
-            {
-                if (Path.GetExtension(attachment.Filename) == outputFormat)
-                {
-                    await FollowupAsync($"Silly, you are converting from {Path.GetExtension(attachment.Filename)} to {outputFormat}.", ephemeral: ephemeral);
-                    return;
-                }
-                await converter(inputFilePath, outputFilePath, fps);
-            }
-            else
+            if (!conversionMap.TryGetValue(outputFormat, out var converter))
             {
                 await FollowupAsync("Unsupported conversion type.", ephemeral: ephemeral);
                 return;
             }
+
+            if (Path.GetExtension(attachment.Filename) == outputFormat)
+            {
+                await FollowupAsync($"Silly, you are converting from {Path.GetExtension(attachment.Filename)} to {outputFormat}.", ephemeral: ephemeral);
+                return;
+            }
+            await converter(inputFilePath, outputFilePath, fps);
 
             await FollowupWithFileAsync(outputFilePath, $"output{outputFormat}", message, ephemeral: ephemeral);
         }
