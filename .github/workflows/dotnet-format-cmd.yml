@@ -5,11 +5,22 @@ on:
 
 jobs:
   format:
-    if: ${{ github.event.issue.pull_request && github.event.comment.author_association == 'COLLABORATOR' && startsWith(github.event.comment.body, '/format') }}
+    if: ${{ github.event.issue.pull_request && (github.event.comment.user.id == github.event.issue.user.id || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR') && startsWith(github.event.comment.body, '/format') }}
     runs-on: ubuntu-latest
     steps:
+      - name: Acknowledge request (comment reaction)
+        uses: dkershner6/reaction-action@v2.2.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reaction: "rocket"
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ format('refs/pull/{0}/head', github.event.issue.number) }}
+      - name: Checkout to pr
+        run: gh pr checkout ${{ github.event.issue.number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -18,32 +29,41 @@ jobs:
         run: dotnet restore
       - name: Format solution
         run: dotnet format 'Discord QuickEdit.sln' --no-restore
-      - name: Commit changes
+      - name: Check for changes
+        id: git-changes-check
         run: |
+          # https://stackoverflow.com/questions/5143795/how-can-i-check-in-a-bash-script-if-my-local-git-repository-has-changes ^^
+          # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-output-parameter
+          if [[ `git status --porcelain` ]]; then
+            echo "Changes found. Continuing"
+            echo "FOUND=true" > "$GITHUB_OUTPUT"
+          else
+            echo "No changes found. Skipping"
+            echo "FOUND=false" > "$GITHUB_OUTPUT"
+          fi
+      - name: Commit changes
+        if: ${{ steps.git-changes-check.outputs.FOUND == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Format code" -m "Manual format triggered by: ${{github.event.sender.name}}"
+          git commit -m "Format code" -m "Manual format triggered by: ${{ github.event.sender.name }}"
           git push
+      - name: Report skipped
+        if: ${{ steps.git-changes-check.outputs.FOUND == 'false' }}
+        uses: mshick/add-pr-comment@v2.8.2
+        with:
+          message: Nothing to format
+          allow-repeats: true
       - name: Report failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: mshick/add-pr-comment@v2.8.2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: ${{github.event.issue.id}},
-              owner: ${{github.event.repository.owner}},
-              repo: ${{github.event.repository}},
-              body: 'Formatting failed'
-            })
+          message: Formatting failed
+          allow-repeats: true
       - name: Report success
-        if: success()
-        uses: actions/github-script@v7
+        if: ${{ success() && steps.git-changes-check.outputs.FOUND == 'true' }}
+        uses: mshick/add-pr-comment@v2.8.2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: ${{github.event.issue.id}},
-              owner: ${{github.event.repository.owner}},
-              repo: ${{github.event.repository}},
-              body: 'Successfully formatted'
-            })
+          message: Formatted successfully
+          allow-repeats: true
