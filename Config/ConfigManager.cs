@@ -1,8 +1,8 @@
-using Serilog;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using System.ComponentModel.DataAnnotations;
+using Serilog;
 
 namespace QuickEdit.Config;
 
@@ -48,4 +48,3 @@ internal sealed class ConfigManager
 		Validator.ValidateObject(config, validationContext, validateAllProperties: true);
 	}
 }
-
