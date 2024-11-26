@@ -1,8 +1,8 @@
+using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
 using FFMpegCore;
 using Serilog;
-using System.Text.RegularExpressions;
 
 namespace QuickEdit.Commands.Modules;
 [Group("video", "Video utilities")]
@@ -18,15 +18,14 @@ public class VideoUtils : InteractionModuleBase
 		[Summary(description: "A message to send with the video when it's trimmed")] string message = "",
 		[Summary(description: "If the video should be sent as a temporary message, that's only visible to you")] bool ephemeral = false)
 	{
-		string tempDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tmp");
-		string videoInputPath = Path.Combine(tempDirPath, "input.mp4");      // Normally, I would use Path.GetTempFileName(), but FFMpegCore doesn't seem to
-		string videoOutputPath = Path.Combine(tempDirPath, "output.mp4");    // like the .tmp file extension (or anything other than .mp4) as far as i know
+		string videoInputPath = Path.GetTempFileName();
+		string videoOutputPath = Path.Combine(Path.GetTempPath(), videoInputPath + ".mp4");
 
 		// Achknowledge the command
 		await DeferAsync(ephemeral);
 
 		// Reject incorrect video formats
-		if (video.ContentType != "video/mp4")
+		if (video.ContentType != "video/mp4" && video.ContentType != "video/quicktime")
 		{
 			await FollowupAsync("Invalid video format. Please provide an MP4 file.", ephemeral: true);
 			return;
@@ -53,34 +52,27 @@ public class VideoUtils : InteractionModuleBase
 			await FollowupAsync("Invalid time format. Please provide a valid time format (XXh XXm XXs XXms).", ephemeral: true);
 			return;
 		}
-
 		// Make sure the times are not negative | https://stackoverflow.com/a/1018659/17003609 (comment)
 		trimStart = trimStart.Duration();
 		trimEnd = trimEnd.Duration();
-
 		// The video can't be trimmed if both start and end times are 0
 		if (trimStart == TimeSpan.Zero && trimEnd == TimeSpan.Zero)
 		{
 			await FollowupAsync("You must provide a start or end time to trim the video.", ephemeral: true);
 			return;
 		}
-
-		// Check if the temporary directory, where the video is supposed to be exists
-		if (!Directory.Exists(tempDirPath))
-		{
-			Directory.CreateDirectory(tempDirPath);
-			Log.Information("TMP directory not found. Created it automatically");
-		}
-
 		await DownloadVideoAsync(video.Url, videoInputPath);
-
 		var mediaInfo = await FFProbe.AnalyseAsync(videoInputPath);
 		CheckTimes(mediaInfo.Duration, ref trimStart, ref trimEnd);
-
 		// Process and send video
-		await FFMpeg.SubVideoAsync(videoInputPath, videoOutputPath, trimStart, trimEnd);
-		await FollowupWithFileAsync(videoOutputPath, video.Filename, message, ephemeral: ephemeral);
+		var ffmpegArgs = FFMpegArguments
+			.FromFileInput(videoInputPath)
+			.OutputToFile(videoOutputPath, true, options => options
+				.WithCustomArgument("-preset slow") // Use slow preset for better quality
+				.WithCustomArgument($"-t {trimEnd - trimStart}")); // Duration
 
+		await ffmpegArgs.ProcessAsynchronously();
+		await FollowupWithFileAsync(videoOutputPath, video.Filename, message, ephemeral: ephemeral);
 		// Clean up
 		File.Delete(videoInputPath);
 		File.Delete(videoOutputPath);

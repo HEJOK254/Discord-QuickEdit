@@ -16,6 +16,7 @@ Read more about how you can solve this issue in [License](#license)
 ## Features
 
 - Video Trimming - Trim your videos with `/video trim`!
+- Video & Image Converter - Convert your Images or Videos into different formats with `/file convert`!
 
 That's it for now lol, but more are planned (like the "jpegify" command)
 
