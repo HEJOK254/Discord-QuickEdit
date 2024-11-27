@@ -41,6 +41,10 @@ This project currently does NOT have a license. I am planning to add it in the f
 
 If you know a bit about software licenses, and want to help, you can open an issue and help me choose one! :D
 
+### Used libraries
+
+- [ImageSharp](https://github.com/SixLabors/ImageSharp) - [Apache License, Version 2.0](LICENSE-ImageSharp)
+
 ## ToDo
 
 The todo for the project is generally just the [issues](https://github.com/HEJOK254/Discord-QuickEdit/issues) + the [GitHub Project](https://github.com/users/HEJOK254/projects/8).
