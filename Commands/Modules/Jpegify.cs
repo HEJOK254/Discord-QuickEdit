@@ -52,11 +52,6 @@ public class Jpegify : InteractionModuleBase
         }
     }
 
-    private static void CompressImage(string input, string output, int quality) 
-    {
-
-    }
-
     private static async Task DownloadImageAsync(string uri, string path)
 	{
 		using var client = new HttpClient();
