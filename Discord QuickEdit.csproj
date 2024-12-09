@@ -15,8 +15,8 @@
 	<PackageReference Include="FFMpegCore" Version="5.1.0" />
 	<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 	<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-	<PackageReference Include="Serilog" Version="4.1.0" />
-	<PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+	<PackageReference Include="Serilog" Version="4.2.0" />
+	<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
 	<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 	<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 	<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
